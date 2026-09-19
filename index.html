@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Opportunity Pipeline v45</title>
+<title>Opportunity Pipeline v51</title>
 <link rel="icon" href="https://ugsconsulting.com/wp-content/uploads/2026/05/cropped-UGSLogo-32x32.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
@@ -95,7 +95,6 @@
 .ps-summary-stat .v{font-size:36px;font-weight:700}
 .ps-summary-stat .l{font-size:10px;opacity:.7}
 </style>
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
 <div class="hdr">
@@ -129,9 +128,16 @@
     <input id="drFirmName" placeholder="Firm name (e.g. XYZ Consulting)" style="border:1px solid var(--bdr);border-radius:6px;padding:5px 8px;font-size:11px;width:100%" value="">
     <input id="drFirmUrl" placeholder="Website URL" style="border:1px solid var(--bdr);border-radius:6px;padding:5px 8px;font-size:11px;width:100%" value="">
     <input id="drFirmLogo" placeholder="Logo URL (optional)" style="border:1px solid var(--bdr);border-radius:6px;padding:5px 8px;font-size:11px;width:100%" value="">
+    <div style="border-top:0.5px solid var(--bdr);margin:6px 0;padding-top:8px">
+      <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);margin-bottom:6px">📊 Google Sheets</div>
+      <label style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);display:block;margin-bottom:3px">Apps Script URL</label>
+      <input id="drScriptUrl" type="text" placeholder="https://script.google.com/macros/s/AKfycbxoUytkcCGCHCohARHAOSwfx0CcLZUR0mfWdJJTrFmgy8gVv2X8fo9aGwIrVUMnbc8/exec" onchange="localStorage.setItem('gs_script_url',this.value.trim());updateGSBtnLabel();showDone('✓ Script URL saved',2000)" style="border:1px solid var(--bdr);border-radius:6px;padding:5px 8px;font-size:11px;width:100%;box-sizing:border-box;margin-bottom:4px">
+      <label style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);display:block;margin-bottom:3px">Sheet Token</label>
+      <input id="drSheetToken" type="password" placeholder="Ashish@1981" onchange="localStorage.setItem('gs_sheet_token',this.value.trim());showDone('✓ Token saved',2000)" style="border:1px solid var(--bdr);border-radius:6px;padding:5px 8px;font-size:11px;width:100%;box-sizing:border-box;margin-bottom:4px">
+    </div>
     <div style="display:flex;gap:6px;align-items:center">
       <div style="flex:1">
-        <label style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);display:block;margin-bottom:3px">Groq API key <span style="font-weight:400;text-transform:none">(for auto-fill)</span></label>
+        <label style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);display:block;margin-bottom:3px">Groq API key <span style="font-weight:400;text-transform:none">(for AI features)</span></label>
         <input id="drGroqKey" type="password" placeholder="gsk_..." style="border:1px solid var(--bdr);border-radius:6px;padding:5px 8px;font-size:11px;width:100%;box-sizing:border-box" oninput="if(this.value.startsWith('gsk_'))saveGroqKey()">
       </div>
       <a href="https://console.groq.com/keys" target="_blank" style="font-size:9px;color:#1A6FB5;white-space:nowrap;margin-top:14px">Get free key ↗</a>
@@ -1608,164 +1614,49 @@ function _activeFilterLabel(){
 }
 
 
-// ── Google Sheets — Master Workbook (create once, update tabs) ─
-const GS_SCOPES      = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file';
-const GS_WB_KEY      = 'gs_master_workbook_id';   // localStorage key for workbook ID
-const GS_WB_URL_KEY  = 'gs_master_workbook_url';  // localStorage key for URL
+// ── Google Sheets — Apps Script Web App approach ─────────────
+// No OAuth, no Client ID — just paste the Apps Script URL in My Profile
+
+const GS_URL_KEY     = 'gs_script_url';
 const GS_TAB_SUBS    = 'Sub-Targets';
 const GS_TAB_OPPS    = 'Opportunities';
-const GS_TAB_LOG     = 'Enrichment Log';
 
-function getGoogleClientId(){
-  return localStorage.getItem('google_client_id')||'';
+function getScriptUrl(){
+  return localStorage.getItem(GS_URL_KEY)||'https://script.google.com/macros/s/AKfycbxoUytkcCGCHCohARHAOSwfx0CcLZUR0mfWdJJTrFmgy8gVv2X8fo9aGwIrVUMnbc8/exec';
 }
-
-function getMasterWbId(){ return localStorage.getItem(GS_WB_KEY)||''; }
-function getMasterWbUrl(){ return localStorage.getItem(GS_WB_URL_KEY)||''; }
-
-function saveMasterWb(id,url){
-  localStorage.setItem(GS_WB_KEY,id);
-  localStorage.setItem(GS_WB_URL_KEY,url);
-  updateGSBtnLabel();
+function getSheetToken(){
+  return localStorage.getItem('gs_sheet_token')||'Ashish@1981';
 }
 
 function updateGSBtnLabel(){
   const lbl=document.getElementById('gsCreateLabel');
   if(!lbl)return;
-  const wbId=getMasterWbId();
-  lbl.textContent=wbId?'Update Google Sheet':'Create Google Sheet';
+  lbl.textContent=getScriptUrl()?'Update Google Sheet':'Create Google Sheet';
 }
 
-// Call on page load to set correct label
 document.addEventListener('DOMContentLoaded',()=>{
   try{updateGSBtnLabel();}catch(e){}
 });
 
-// ── Main entry point ──────────────────────────────────────────
-function createGoogleSheet(){
-  const clientId=getGoogleClientId();
-  if(!clientId){ showGSClientIdSetup(); return; }
+// ── Sub-Contracting → Google Sheet ───────────────────────────
+async function createGoogleSheet(){
+  const url=getScriptUrl();
+  if(!url){ showGSScriptSetup(); return; }
 
   const rows=_getFilteredAwardees();
   if(!rows.length){ showDone('No awardees match current filters',2500); return; }
 
   const btn=document.getElementById('gsCreateBtn');
   const lbl=document.getElementById('gsCreateLabel');
-  if(lbl) lbl.textContent='Signing in...';
-  if(btn) btn.disabled=true;
+  if(btn)btn.disabled=true;
+  if(lbl)lbl.textContent='Pushing to sheet...';
 
-  const client=google.accounts.oauth2.initTokenClient({
-    client_id:clientId,
-    scope:GS_SCOPES,
-    callback:async(resp)=>{
-      if(resp.error){
-        if(lbl) lbl.textContent=getMasterWbId()?'Update Google Sheet':'Create Google Sheet';
-        if(btn) btn.disabled=false;
-        showDone('Google sign-in failed: '+resp.error,3000);
-        return;
-      }
-      if(lbl) lbl.textContent=getMasterWbId()?'Updating sheet...':'Creating sheet...';
-      await _syncMasterWorkbook(rows, resp.access_token);
-      if(btn) btn.disabled=false;
-      updateGSBtnLabel();
-    }
-  });
-  client.requestAccessToken();
-}
-
-// ── Smart create or update ────────────────────────────────────
-async function _syncMasterWorkbook(rows, token){
-  try{
-    let wbId   = getMasterWbId();
-    let wbUrl  = getMasterWbUrl();
-    let isNew  = false;
-
-    // If we have a saved workbook ID — verify it still exists
-    if(wbId){
-      const check=await fetch(
-        `https://sheets.googleapis.com/v4/spreadsheets/${wbId}?fields=spreadsheetId`,
-        {headers:{'Authorization':'Bearer '+token}}
-      );
-      if(!check.ok){ wbId=''; wbUrl=''; } // deleted — will create new
-    }
-
-    // Create master workbook if needed
-    if(!wbId){
-      const created=await _createMasterWorkbook(token);
-      wbId  = created.id;
-      wbUrl = created.url;
-      saveMasterWb(wbId, wbUrl);
-      isNew = true;
-    }
-
-    // Get current sheets in workbook
-    const wbMeta=await fetch(
-      `https://sheets.googleapis.com/v4/spreadsheets/${wbId}?fields=sheets.properties`,
-      {headers:{'Authorization':'Bearer '+token}}
-    ).then(r=>r.json());
-    const existingSheets=wbMeta.sheets?.map(s=>s.properties)||[];
-
-    // Ensure Sub-Targets tab exists, get its sheetId
-    let subTabId = await _ensureTab(wbId, GS_TAB_SUBS, existingSheets, token, {red:0.051,green:0.231,blue:0.431});
-
-    // Write Sub-Targets data
-    await _writeSubTargets(wbId, subTabId, rows, token);
-
-    // Show result
-    const wbLink=wbUrl||`https://docs.google.com/spreadsheets/d/${wbId}`;
-    window.open(wbLink,'_blank');
-    showDone(`✓ ${isNew?'Created':'Updated'} — ${rows.length} companies in "${GS_TAB_SUBS}" tab`,5000);
-    saveMasterWb(wbId, wbLink);
-
-  }catch(err){
-    showDone('✗ '+err.message.slice(0,80),5000);
-    console.error('GS sync error:',err);
-  }
-}
-
-// ── Create the master workbook with all 3 tabs ────────────────
-async function _createMasterWorkbook(token){
-  const resp=await fetch('https://sheets.googleapis.com/v4/spreadsheets',{
-    method:'POST',
-    headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
-    body:JSON.stringify({
-      properties:{title:'UGS Opportunity Pipeline'},
-      sheets:[
-        {properties:{title:GS_TAB_SUBS,  tabColor:{red:0.051,green:0.231,blue:0.431},gridProperties:{frozenRowCount:1}}},
-        {properties:{title:GS_TAB_OPPS,  tabColor:{red:0.18,green:0.49,blue:0.196}, gridProperties:{frozenRowCount:1}}},
-        {properties:{title:GS_TAB_LOG,   tabColor:{red:0.72,green:0.56,blue:0.118}, gridProperties:{frozenRowCount:1}}}
-      ]
-    })
-  });
-  if(!resp.ok) throw new Error('Failed to create workbook: '+resp.status);
-  const wb=await resp.json();
-  return{id:wb.spreadsheetId, url:`https://docs.google.com/spreadsheets/d/${wb.spreadsheetId}`};
-}
-
-// ── Ensure a tab exists, add if not ──────────────────────────
-async function _ensureTab(wbId, tabName, existing, token){
-  const found=existing.find(s=>s.title===tabName);
-  if(found) return found.sheetId;
-  // Add the tab
-  const resp=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${wbId}:batchUpdate`,{
-    method:'POST',
-    headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
-    body:JSON.stringify({requests:[{addSheet:{properties:{title:tabName,gridProperties:{frozenRowCount:1}}}}]})
-  });
-  if(!resp.ok) throw new Error('Failed to add tab '+tabName+': '+resp.status);
-  const res=await resp.json();
-  return res.replies[0].addSheet.properties.sheetId;
-}
-
-// ── Write Sub-Targets tab ─────────────────────────────────────
-async function _writeSubTargets(wbId, sheetId, rows, token){
   const headers=[
     'Company Name','Partnership Score','NAICS Match','Top NAICS','NAICS Description',
     'Total Contracts','Total Value ($)','Avg Contract ($)','Years Active',
     'Latest Award','FAR 19.702','Primary Agency','Primary State','Set-Asides',
-    // Enrichment columns — filled manually or via Apps Script
     'BD Contact Name','BD Email','BD Phone','BD LinkedIn',
-    'Company Website','Outreach Status','Last Updated','Source'
+    'Company Website','Outreach Status','Last Updated'
   ];
 
   const now=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
@@ -1784,160 +1675,91 @@ async function _writeSubTargets(wbId, sheetId, rows, token){
     a.ag||'',
     a.st||'',
     (a.sas||[]).join('; '),
-    '','','','','','Not contacted',now,'SAM.gov'
+    '','','','','','Not contacted',now
   ]);
 
-  const allRows=[headers,...dataRows];
-
-  // Clear existing content first
-  await fetch(
-    `https://sheets.googleapis.com/v4/spreadsheets/${wbId}/values/${encodeURIComponent(GS_TAB_SUBS)}?valueRenderOption=RAW`,
-    {method:'GET',headers:{'Authorization':'Bearer '+token}}
-  );
-  await fetch(
-    `https://sheets.googleapis.com/v4/spreadsheets/${wbId}/values/${encodeURIComponent(GS_TAB_SUBS)}:clear`,
-    {method:'POST',headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'}}
-  );
-
-  // Write new data
-  const writeResp=await fetch(
-    `https://sheets.googleapis.com/v4/spreadsheets/${wbId}/values/${encodeURIComponent(GS_TAB_SUBS+'!A1')}?valueInputOption=RAW`,
-    {
-      method:'PUT',
-      headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
-      body:JSON.stringify({values:allRows})
+  try{
+    const resp=await fetch(url,{
+      method:'POST',
+      headers:{'Content-Type':'text/plain'},
+      body:JSON.stringify({tab:GS_TAB_SUBS, headers, rows:dataRows, token:getSheetToken()})
+    });
+    const result=await resp.json().catch(()=>({ok:false,error:'Invalid response'}));
+    if(result.ok){
+      showDone('✓ '+dataRows.length+' companies pushed to "'+GS_TAB_SUBS+'" tab',4000);
+      if(result.url) window.open(result.url,'_blank');
+    } else {
+      throw new Error(result.error||'Push failed');
     }
-  );
-  if(!writeResp.ok) throw new Error('Failed to write data: '+writeResp.status);
-
-  // Format: bold header, color rows by score
-  const scoreCol=1; // column B
-  const formatRequests=[
-    {repeatCell:{
-      range:{sheetId,startRowIndex:0,endRowIndex:1},
-      cell:{userEnteredFormat:{
-        backgroundColor:{red:0.051,green:0.231,blue:0.431},
-        textFormat:{bold:true,foregroundColor:{red:1,green:1,blue:1},fontSize:10},
-        horizontalAlignment:'CENTER'
-      }},
-      fields:'userEnteredFormat(backgroundColor,textFormat,horizontalAlignment)'
-    }},
-    {autoResizeDimensions:{dimensions:{sheetId,dimension:'COLUMNS',startIndex:0,endIndex:headers.length}}}
-  ];
-
-  // Color rows by score
-  dataRows.forEach((row,i)=>{
-    const sc=row[1]||0;
-    const bg=sc>=75?{red:0.878,green:0.969,blue:0.878}:sc>=50?{red:1,green:0.965,blue:0.878}:{red:1,green:1,blue:1};
-    formatRequests.push({repeatCell:{
-      range:{sheetId,startRowIndex:i+1,endRowIndex:i+2,startColumnIndex:0,endColumnIndex:2},
-      cell:{userEnteredFormat:{backgroundColor:bg}},
-      fields:'userEnteredFormat.backgroundColor'
-    }});
-  });
-
-  await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${wbId}:batchUpdate`,{
-    method:'POST',
-    headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
-    body:JSON.stringify({requests:formatRequests})
-  });
+  }catch(err){
+    const msg=err.message.includes('Failed to fetch')
+      ?'Cannot reach Apps Script — check URL in My Profile and ensure "Who has access: Anyone"'
+      :'Error: '+err.message.slice(0,80);
+    showDone('✗ '+msg,5000);
+  }finally{
+    if(btn)btn.disabled=false;
+    updateGSBtnLabel();
+  }
 }
 
-// ── Push Opportunities tab (called from Shortlist) ────────────
+// ── Shortlist → Google Sheet ──────────────────────────────────
 async function pushOppsToGoogleSheet(oppRows){
-  const clientId=getGoogleClientId();
-  if(!clientId){ showGSClientIdSetup(); return; }
+  const url=getScriptUrl();
+  if(!url){ showGSScriptSetup(); return; }
   if(!oppRows||!oppRows.length){ showDone('No shortlisted opportunities',2000); return; }
 
   const iconEl=document.getElementById('gsIcon');
-  if(iconEl) iconEl.textContent='⟳';
+  if(iconEl)iconEl.textContent='⟳';
 
-  const client=google.accounts.oauth2.initTokenClient({
-    client_id:clientId,
-    scope:GS_SCOPES,
-    callback:async(resp)=>{
-      if(resp.error){ showDone('Sign-in failed',2000); if(iconEl)iconEl.textContent='📊'; return; }
-      try{
-        let wbId=getMasterWbId();
-        let wbUrl=getMasterWbUrl();
+  const headers=['Title','Sol Number','Agency','NAICS','Match Score','Set-Aside',
+    'Deadline','Days Left','Posted','Contact Name','Contact Email','Contact Phone',
+    'SAM.gov URL','Stage','BD Priority','Added Date'];
+  const now=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  const rows=oppRows.map(r=>[
+    r.title||'',r.solNum||'',r.agency||'',r.naics||'',
+    (r.match||0)+'%',r.setAside||'Unrestricted',
+    fmtD(r.deadline),r.daysLeft!==null?r.daysLeft:'',fmtD(r.posted),
+    r.pocName||'',r.pocEmail||'',r.pocPhone||'',
+    r.link||'',
+    (r.match||0)>=75?'Qualified — Bid Decision':(r.match||0)>=50?'New Opportunity':'Watching',
+    (r.match||0)>=75?'High':(r.match||0)>=50?'Medium':'Low',
+    now
+  ]);
 
-        if(wbId){
-          const check=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${wbId}?fields=spreadsheetId`,{headers:{'Authorization':'Bearer '+resp.access_token}});
-          if(!check.ok){ wbId=''; wbUrl=''; }
-        }
-        if(!wbId){
-          const created=await _createMasterWorkbook(resp.access_token);
-          wbId=created.id; wbUrl=created.url;
-          saveMasterWb(wbId,wbUrl);
-        }
-
-        const wbMeta=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${wbId}?fields=sheets.properties`,{headers:{'Authorization':'Bearer '+resp.access_token}}).then(r=>r.json());
-        const existing=wbMeta.sheets?.map(s=>s.properties)||[];
-        const oppTabId=await _ensureTab(wbId,GS_TAB_OPPS,existing,resp.access_token);
-
-        // Write opportunities
-        const headers=['Title','Sol Number','Agency','NAICS','Match Score','Set-Aside',
-          'Deadline','Days Left','Posted','Contact Name','Contact Email','Contact Phone',
-          'SAM.gov URL','Stage','BD Priority','Added Date'];
-        const now=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
-        const rows=oppRows.map(r=>[
-          r.title||'',r.solNum||'',r.agency||'',r.naics||'',
-          (r.match||0)+'%',r.setAside||'Unrestricted',
-          fmtD(r.deadline),r.daysLeft!==null?r.daysLeft:'',fmtD(r.posted),
-          r.pocName||'',r.pocEmail||'',r.pocPhone||'',
-          r.link||'',
-          (r.match||0)>=75?'Qualified — Bid Decision':(r.match||0)>=50?'New Opportunity':'Watching',
-          (r.match||0)>=75?'High':(r.match||0)>=50?'Medium':'Low',
-          now
-        ]);
-
-        await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${wbId}/values/${encodeURIComponent(GS_TAB_OPPS)}:clear`,{method:'POST',headers:{'Authorization':'Bearer '+resp.access_token,'Content-Type':'application/json'}});
-        await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${wbId}/values/${encodeURIComponent(GS_TAB_OPPS+'!A1')}?valueInputOption=RAW`,{
-          method:'PUT',
-          headers:{'Authorization':'Bearer '+resp.access_token,'Content-Type':'application/json'},
-          body:JSON.stringify({values:[headers,...rows]})
-        });
-
-        // Format header
-        await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${wbId}:batchUpdate`,{
-          method:'POST',
-          headers:{'Authorization':'Bearer '+resp.access_token,'Content-Type':'application/json'},
-          body:JSON.stringify({requests:[{repeatCell:{
-            range:{sheetId:oppTabId,startRowIndex:0,endRowIndex:1},
-            cell:{userEnteredFormat:{backgroundColor:{red:0.18,green:0.49,blue:0.196},textFormat:{bold:true,foregroundColor:{red:1,green:1,blue:1},fontSize:10}}},
-            fields:'userEnteredFormat(backgroundColor,textFormat)'
-          }},{autoResizeDimensions:{dimensions:{sheetId:oppTabId,dimension:'COLUMNS',startIndex:0,endIndex:headers.length}}}]})
-        });
-
-        window.open(wbUrl||`https://docs.google.com/spreadsheets/d/${wbId}`,'_blank');
-        showDone('✓ '+rows.length+' opportunities pushed to "'+GS_TAB_OPPS+'" tab',4000);
-        saveMasterWb(wbId,wbUrl);
-        if(iconEl)iconEl.textContent='📊';
-      }catch(err){
-        showDone('✗ '+err.message.slice(0,80),5000);
-        if(iconEl)iconEl.textContent='📊';
-      }
+  try{
+    const resp=await fetch(url,{
+      method:'POST',
+      headers:{'Content-Type':'text/plain'},
+      body:JSON.stringify({tab:GS_TAB_OPPS, headers, rows, token:getSheetToken()})
+    });
+    const result=await resp.json().catch(()=>({ok:false,error:'Invalid response'}));
+    if(result.ok){
+      showDone('✓ '+rows.length+' opportunities pushed to "'+GS_TAB_OPPS+'" tab',4000);
+      if(result.url) window.open(result.url,'_blank');
+    } else {
+      throw new Error(result.error||'Push failed');
     }
-  });
-  client.requestAccessToken();
+  }catch(err){
+    showDone('✗ '+err.message.slice(0,80),5000);
+  }finally{
+    if(iconEl)iconEl.textContent='📊';
+  }
 }
 
-function showGSClientIdSetup(){
-  const existing=localStorage.getItem('google_client_id')||'';
-  const input=prompt(
-    'To use Google Sheets, enter your Google OAuth Client ID.\n\n'+
-    'Get one free at: console.cloud.google.com\n'+
-    'APIs & Services → Credentials → Create OAuth Client → Web Application\n'+
-    'Authorized origins: '+window.location.origin+'\n\n'+
-    'Paste Client ID (ends in .apps.googleusercontent.com):',
-    existing
+function showGSScriptSetup(){
+  alert(
+    'SETUP (3 minutes):\n\n'+
+    '1. Open your Google Sheet\n'+
+    '2. Extensions → Apps Script\n'+
+    '3. Paste the UGS_Sheet_Script_v1.gs code\n'+
+    '4. Save → Deploy → New deployment\n'+
+    '   Type: Web app | Execute as: Me | Access: Anyone\n'+
+    '5. Copy the Web App URL\n'+
+    '6. Paste into My Profile → Google Sheet Script URL\n\n'+
+    'Then click the button again — data goes straight to your sheet.\n\n'+
+    'IMPORTANT: Set the same token in:\n'+
+    'My Profile → Sheet Secret Token'
   );
-  if(input&&input.includes('.apps.googleusercontent.com')){
-    localStorage.setItem('google_client_id',input.trim());
-    showDone('✓ Client ID saved — click the button again',3000);
-  }else if(input){
-    showDone('✗ Invalid — must end in .apps.googleusercontent.com',3000);
-  }
 }
 
 function exportAwardees(){
@@ -2490,12 +2312,6 @@ function rSubs(){
     const yrs=[...new Set(src.map(r=>{const pd=parseDate(r.awardDate);return pd?pd.getFullYear():null}).filter(Boolean))].sort().reverse();
     yrs.forEach(y=>{const o=document.createElement('option');o.value=y;o.textContent=y;sFyr.appendChild(o);});
     populateMonthFilter(); // populate months from all data on first load
-  }
-  // Populate set-aside filter
-  const sFsa=document.getElementById('sFsa');
-  if(sFsa&&sFsa.options.length<=1){
-    const sas=[...new Set(src.map(r=>r.setAside).filter(Boolean))].sort();
-    sas.forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s.length>35?s.slice(0,33)+'…':s;sFsa.appendChild(o);});
   }
   const sC=document.getElementById('sC');if(sC)sC.textContent=(awards.length||allAwards.length)+' records';
   // Build awardee summary
@@ -3076,9 +2892,8 @@ function openDr(){
   // Load firm profile
   const fn=document.getElementById('drFirmName');if(fn)fn.value=FIRM_NAME||'';
   const fu=document.getElementById('drFirmUrl');if(fu)fu.value=FIRM_URL!=='https://ugsconsulting.com'?FIRM_URL:'';
-  const gcid=document.getElementById('drGoogleClientId');if(gcid){const savedCid=localStorage.getItem('google_client_id')||'';if(savedCid)gcid.value=savedCid;}
-  const gsWbUrl=getMasterWbUrl();const gsWrap=document.getElementById('drGSLinkWrap');const gsLnk=document.getElementById('drGSLink');
-  if(gsWrap&&gsLnk&&gsWbUrl){gsWrap.style.display='block';gsLnk.href=gsWbUrl;gsLnk.textContent=gsWbUrl.slice(0,50)+'...';}
+  const dsu=document.getElementById('drScriptUrl');if(dsu){dsu.value=localStorage.getItem('gs_script_url')||'https://script.google.com/macros/s/AKfycbxoUytkcCGCHCohARHAOSwfx0CcLZUR0mfWdJJTrFmgy8gVv2X8fo9aGwIrVUMnbc8/exec';}
+  const dst=document.getElementById('drSheetToken');if(dst){dst.value=localStorage.getItem('gs_sheet_token')||'Ashish@1981';}
   const gk=document.getElementById('drGroqKey');if(gk){const saved=localStorage.getItem('groq_api_key')||'';if(saved)gk.value=saved;}
   const su=document.getElementById('drSheetsUrl');if(su){const savedUrl=localStorage.getItem('sheets_url')||'';if(savedUrl)su.value=savedUrl;}
   const fl=document.getElementById('drFirmLogo');if(fl)fl.value=FIRM_LOGO&&!FIRM_LOGO.includes('ugsconsulting.com')?FIRM_LOGO:'';
