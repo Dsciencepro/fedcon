@@ -2151,6 +2151,7 @@ function rSubs(){
   if(sFyr&&sFyr.options.length<=1){
     const yrs=[...new Set(src.map(r=>{const pd=parseDate(r.awardDate);return pd?pd.getFullYear():null}).filter(Boolean))].sort().reverse();
     yrs.forEach(y=>{const o=document.createElement('option');o.value=y;o.textContent=y;sFyr.appendChild(o);});
+    populateMonthFilter(); // populate months from all data on first load
   }
   // Populate set-aside filter
   const sFsa=document.getElementById('sFsa');
@@ -2857,11 +2858,27 @@ function clearPiCatFilter(){
 function populateMonthFilter(){
   const fyr=document.getElementById('sFyr')?.value||'';
   const moEl=document.getElementById('sFmo');if(!moEl)return;
-  moEl.innerHTML='<option value="">All months</option>';if(!fyr)return;
-  const src=ugsOnlyS?awards:allAwards;const months=new Set();
-  src.forEach(r=>{if(!r.awardDate)return;const pd=parseDate(r.awardDate);if(pd&&pd.getFullYear()===parseInt(fyr))months.add(pd.getMonth()+1);});
+  const prevVal=moEl.value;
+  moEl.innerHTML='<option value="">All months</option>';
+  const src=ugsOnlyS?awards:allAwards;
+  const months=new Set();
+  src.forEach(r=>{
+    if(!r.awardDate)return;
+    const pd=parseDate(r.awardDate);
+    if(!pd)return;
+    // If year selected — only show months for that year
+    // If no year — show all months that appear in data
+    if(!fyr||pd.getFullYear()===parseInt(fyr))months.add(pd.getMonth()+1);
+  });
   const MN=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  [...months].sort((a,b)=>b-a).forEach(m=>{const o=document.createElement('option');o.value=m;o.textContent=MN[m]+' '+fyr;moEl.appendChild(o);});
+  [...months].sort((a,b)=>a-b).forEach(m=>{
+    const o=document.createElement('option');
+    o.value=m;
+    o.textContent=fyr?MN[m]+' '+fyr:MN[m];
+    moEl.appendChild(o);
+  });
+  // Restore previous selection if still valid
+  if(prevVal&&[...moEl.options].some(o=>o.value===prevVal))moEl.value=prevVal;
 }
 
 function renderScatter(){
