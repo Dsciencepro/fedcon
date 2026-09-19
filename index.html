@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Opportunity Pipeline v39</title>
+<title>Opportunity Pipeline v40</title>
 <link rel="icon" href="https://ugsconsulting.com/wp-content/uploads/2026/05/cropped-UGSLogo-32x32.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
@@ -1550,11 +1550,14 @@ function _getFilteredAwardees(){
     const sortedYrs=[...a.yrs].sort();
     const latestYr=sortedYrs.length?Math.max(...sortedYrs):'';
     // Find most recent award date string for display
-    const latestAwardDate=a.cx.filter(r=>r.awardDate).map(r=>r.awardDate).sort().pop()||'';
+    const _rawLatest=a.cx.filter(r=>r.awardDate).map(r=>r.awardDate).sort().pop()||'';
+    const _ldParsed=_rawLatest?parseDate(_rawLatest):null;
+    const latestAwardDate=_ldParsed?_ldParsed.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'';
+    const latestAwardMonthYear=_ldParsed?_ldParsed.toLocaleDateString('en-US',{month:'short',year:'numeric'}):'';
     return{name:a.name,tv:a.tv,cnt:a.cnt,consistency,topNAICS,naicsMatch:m.type,naicsLabel:m.label,
       naicsColor:m.color,farEligible,certOK,score:Math.min(100,score),avgValue:Math.round(a.tv/a.cnt),
       topAgency:a.ag[0]||'',topState:a.st[0]||'',topSA:a.sa[0]||'',
-      agencies:a.ag,states:a.st,setAsides:a.sa,yrs:sortedYrs,latestYr,latestAwardDate,contracts:a.cx};
+      agencies:a.ag,states:a.st,setAsides:a.sa,yrs:sortedYrs,latestYr,latestAwardDate,latestAwardMonthYear,contracts:a.cx};
   });
   // Apply filters
   if(fval.length){list=list.filter(a=>fval.some(v=>vb[v]&&a.tv/Math.max(a.cnt,1)>=vb[v][0]&&a.tv/Math.max(a.cnt,1)<vb[v][1]));}
@@ -1588,7 +1591,7 @@ function exportAwardees(){
   if(!rows.length){showDone('No awardees to export with current filters',2000);return;}
   const headers=['Rank','Company Name','Top NAICS','NAICS Description','NAICS Match',
     'Total Contracts','Total Value ($)','Avg Contract Value ($)','Consistency (Years Active)',
-    'Latest Award Date','Latest Award Year','Primary Agency','All Agencies','States','Set-Asides',
+    'Latest Award (Month-Year)','Latest Award (Full Date)','Primary Agency','All Agencies','States','Set-Asides',
     'FAR 19.702 Eligible (>$900K)','Cert Compatible','Partnership Score (/100)',
     'Est Sub Value ($)','Sample Contract Titles'];
   const clean=v=>'"'+String(v||'').replace(/"/g,'""')+'"';
@@ -1598,7 +1601,7 @@ function exportAwardees(){
     const latestYr=a.yrs.length?Math.max(...a.yrs):'';
     csvRows.push([
       i+1,clean(a.name),clean(a.topNAICS),clean(NAICS[a.topNAICS]||''),clean(a.naicsMatch),
-      a.cnt,Math.round(a.tv),a.avgValue,a.consistency,clean(a.latestAwardDate||''),latestYr,
+      a.cnt,Math.round(a.tv),a.avgValue,a.consistency,clean(a.latestAwardMonthYear||''),clean(a.latestAwardDate||''),
       clean(a.topAgency),clean(a.agencies.join('; ')),clean(a.states.join('; ')),
       clean(a.setAsides.join('; ')),
       a.farEligible?'Yes':'No',a.certOK?'Yes':'Check',
