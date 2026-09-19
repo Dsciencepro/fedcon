@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Opportunity Pipeline v41</title>
+<title>Opportunity Pipeline v43</title>
 <link rel="icon" href="https://ugsconsulting.com/wp-content/uploads/2026/05/cropped-UGSLogo-32x32.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
@@ -95,6 +95,7 @@
 .ps-summary-stat .v{font-size:36px;font-weight:700}
 .ps-summary-stat .l{font-size:10px;opacity:.7}
 </style>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
 <div class="hdr">
@@ -313,9 +314,9 @@
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
         <div class="tog"><button class="active" id="togUGSs" onclick="setUGSs(true)">My NAICS</button><button id="togAlls" onclick="setUGSs(false)">All NAICS</button></div>
         <button onclick="exportAwardees()" style="display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:6px;border:1px solid #2E7D52;background:rgba(46,125,82,0.08);color:#2E7D52;font-size:11px;font-weight:600;cursor:pointer">⬇ Export CSV</button>
-        <button onclick="exportToGoogleSheets()" style="display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:6px;border:1px solid #1A6FB5;background:rgba(26,111,181,0.08);color:#1A6FB5;font-size:11px;font-weight:600;cursor:pointer" title="Exports with Zoho CRM column names — import directly to Google Sheets then sync to Zoho">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zm-7 14l-5-5 1.4-1.4L12 14.2l7.6-7.6L21 8l-9 9z"/></svg>
-          Google Sheets / Zoho
+        <button onclick="createGoogleSheet()" id="gsCreateBtn" style="display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:6px;border:1px solid #1A6FB5;background:rgba(26,111,181,0.08);color:#1A6FB5;font-size:11px;font-weight:600;cursor:pointer" title="Sign in with Google and create a sheet in your Drive">
+          <svg width="14" height="14" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+          <span id="gsCreateLabel">Create Google Sheet</span>
         </button>
       </div>
     </div>
@@ -653,10 +654,10 @@
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       <button onclick="exportShortlistCSV()" class="btn btn-g" style="display:flex;align-items:center;gap:6px">⬇ Export CSV</button>
       <button onclick="exportShortlistZoho()" class="btn btn-b" style="display:flex;align-items:center;gap:6px">⬇ Zoho CRM CSV</button>
-      <button onclick="pushToGoogleSheets()" class="btn" style="display:flex;align-items:center;gap:6px;background:linear-gradient(135deg,#2E7D52,#1A6FB5);color:#fff;border:none">
+      <button onclick="pushOppsToGoogleSheet(getShortlistedOpps())" class="btn" style="display:flex;align-items:center;gap:6px;background:linear-gradient(135deg,#2E7D52,#1A6FB5);color:#fff;border:none">
         <span id="gsIcon">📊</span> Push to Google Sheets
       </button>
-      <button onclick="showSheetsSetup()" style="font-size:10px;color:var(--t3);background:none;border:none;cursor:pointer;text-decoration:underline">Setup guide</button>
+
       <button onclick="clearShortlist()" style="padding:6px 14px;border-radius:6px;border:1px solid var(--r);background:none;color:var(--r);font-size:11px;font-weight:600;cursor:pointer">Clear all</button>
     </div>
   </div>
@@ -1596,6 +1597,339 @@ function _activeFilterLabel(){
   return parts.length?'_filtered_'+parts.join('_'):'_all';
 }
 
+
+// ── Google Sheets — Master Workbook (create once, update tabs) ─
+const GS_SCOPES      = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file';
+const GS_WB_KEY      = 'gs_master_workbook_id';   // localStorage key for workbook ID
+const GS_WB_URL_KEY  = 'gs_master_workbook_url';  // localStorage key for URL
+const GS_TAB_SUBS    = 'Sub-Targets';
+const GS_TAB_OPPS    = 'Opportunities';
+const GS_TAB_LOG     = 'Enrichment Log';
+
+function getGoogleClientId(){
+  return localStorage.getItem('google_client_id')||'';
+}
+
+function getMasterWbId(){ return localStorage.getItem(GS_WB_KEY)||''; }
+function getMasterWbUrl(){ return localStorage.getItem(GS_WB_URL_KEY)||''; }
+
+function saveMasterWb(id,url){
+  localStorage.setItem(GS_WB_KEY,id);
+  localStorage.setItem(GS_WB_URL_KEY,url);
+  updateGSBtnLabel();
+}
+
+function updateGSBtnLabel(){
+  const lbl=document.getElementById('gsCreateLabel');
+  if(!lbl)return;
+  const wbId=getMasterWbId();
+  lbl.textContent=wbId?'Update Google Sheet':'Create Google Sheet';
+}
+
+// Call on page load to set correct label
+document.addEventListener('DOMContentLoaded',()=>{
+  try{updateGSBtnLabel();}catch(e){}
+});
+
+// ── Main entry point ──────────────────────────────────────────
+function createGoogleSheet(){
+  const clientId=getGoogleClientId();
+  if(!clientId){ showGSClientIdSetup(); return; }
+
+  const rows=_getFilteredAwardees();
+  if(!rows.length){ showDone('No awardees match current filters',2500); return; }
+
+  const btn=document.getElementById('gsCreateBtn');
+  const lbl=document.getElementById('gsCreateLabel');
+  if(lbl) lbl.textContent='Signing in...';
+  if(btn) btn.disabled=true;
+
+  const client=google.accounts.oauth2.initTokenClient({
+    client_id:clientId,
+    scope:GS_SCOPES,
+    callback:async(resp)=>{
+      if(resp.error){
+        if(lbl) lbl.textContent=getMasterWbId()?'Update Google Sheet':'Create Google Sheet';
+        if(btn) btn.disabled=false;
+        showDone('Google sign-in failed: '+resp.error,3000);
+        return;
+      }
+      if(lbl) lbl.textContent=getMasterWbId()?'Updating sheet...':'Creating sheet...';
+      await _syncMasterWorkbook(rows, resp.access_token);
+      if(btn) btn.disabled=false;
+      updateGSBtnLabel();
+    }
+  });
+  client.requestAccessToken();
+}
+
+// ── Smart create or update ────────────────────────────────────
+async function _syncMasterWorkbook(rows, token){
+  try{
+    let wbId   = getMasterWbId();
+    let wbUrl  = getMasterWbUrl();
+    let isNew  = false;
+
+    // If we have a saved workbook ID — verify it still exists
+    if(wbId){
+      const check=await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${wbId}?fields=spreadsheetId`,
+        {headers:{'Authorization':'Bearer '+token}}
+      );
+      if(!check.ok){ wbId=''; wbUrl=''; } // deleted — will create new
+    }
+
+    // Create master workbook if needed
+    if(!wbId){
+      const created=await _createMasterWorkbook(token);
+      wbId  = created.id;
+      wbUrl = created.url;
+      saveMasterWb(wbId, wbUrl);
+      isNew = true;
+    }
+
+    // Get current sheets in workbook
+    const wbMeta=await fetch(
+      `https://sheets.googleapis.com/v4/spreadsheets/${wbId}?fields=sheets.properties`,
+      {headers:{'Authorization':'Bearer '+token}}
+    ).then(r=>r.json());
+    const existingSheets=wbMeta.sheets?.map(s=>s.properties)||[];
+
+    // Ensure Sub-Targets tab exists, get its sheetId
+    let subTabId = await _ensureTab(wbId, GS_TAB_SUBS, existingSheets, token, {red:0.051,green:0.231,blue:0.431});
+
+    // Write Sub-Targets data
+    await _writeSubTargets(wbId, subTabId, rows, token);
+
+    // Show result
+    const wbLink=wbUrl||`https://docs.google.com/spreadsheets/d/${wbId}`;
+    window.open(wbLink,'_blank');
+    showDone(`✓ ${isNew?'Created':'Updated'} — ${rows.length} companies in "${GS_TAB_SUBS}" tab`,5000);
+    saveMasterWb(wbId, wbLink);
+
+  }catch(err){
+    showDone('✗ '+err.message.slice(0,80),5000);
+    console.error('GS sync error:',err);
+  }
+}
+
+// ── Create the master workbook with all 3 tabs ────────────────
+async function _createMasterWorkbook(token){
+  const resp=await fetch('https://sheets.googleapis.com/v4/spreadsheets',{
+    method:'POST',
+    headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
+    body:JSON.stringify({
+      properties:{title:'UGS Opportunity Pipeline'},
+      sheets:[
+        {properties:{title:GS_TAB_SUBS,  tabColor:{red:0.051,green:0.231,blue:0.431},gridProperties:{frozenRowCount:1}}},
+        {properties:{title:GS_TAB_OPPS,  tabColor:{red:0.18,green:0.49,blue:0.196}, gridProperties:{frozenRowCount:1}}},
+        {properties:{title:GS_TAB_LOG,   tabColor:{red:0.72,green:0.56,blue:0.118}, gridProperties:{frozenRowCount:1}}}
+      ]
+    })
+  });
+  if(!resp.ok) throw new Error('Failed to create workbook: '+resp.status);
+  const wb=await resp.json();
+  return{id:wb.spreadsheetId, url:`https://docs.google.com/spreadsheets/d/${wb.spreadsheetId}`};
+}
+
+// ── Ensure a tab exists, add if not ──────────────────────────
+async function _ensureTab(wbId, tabName, existing, token){
+  const found=existing.find(s=>s.title===tabName);
+  if(found) return found.sheetId;
+  // Add the tab
+  const resp=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${wbId}:batchUpdate`,{
+    method:'POST',
+    headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
+    body:JSON.stringify({requests:[{addSheet:{properties:{title:tabName,gridProperties:{frozenRowCount:1}}}}]})
+  });
+  if(!resp.ok) throw new Error('Failed to add tab '+tabName+': '+resp.status);
+  const res=await resp.json();
+  return res.replies[0].addSheet.properties.sheetId;
+}
+
+// ── Write Sub-Targets tab ─────────────────────────────────────
+async function _writeSubTargets(wbId, sheetId, rows, token){
+  const headers=[
+    'Company Name','Partnership Score','NAICS Match','Top NAICS','NAICS Description',
+    'Total Contracts','Total Value ($)','Avg Contract ($)','Years Active',
+    'Latest Award','FAR 19.702','Primary Agency','Primary State','Set-Asides',
+    // Enrichment columns — filled manually or via Apps Script
+    'BD Contact Name','BD Email','BD Phone','BD LinkedIn',
+    'Company Website','Outreach Status','Last Updated','Source'
+  ];
+
+  const now=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  const dataRows=rows.map(a=>[
+    a.name||'',
+    a.score||a.sc||0,
+    a.ml||'',
+    a.tn||'',
+    (a.tn&&NAICS[a.tn])?NAICS[a.tn]:'',
+    a.cnt||0,
+    Math.round(a.tv||0),
+    Math.round((a.tv||0)/Math.max(a.cnt||1,1)),
+    a.consistency||a.cons||1,
+    a.latestAwardMonthYear||a.latestYr||'',
+    (a.far||a.farEligible)?'Yes':'No',
+    a.ag||'',
+    a.st||'',
+    (a.sas||[]).join('; '),
+    '','','','','','Not contacted',now,'SAM.gov'
+  ]);
+
+  const allRows=[headers,...dataRows];
+
+  // Clear existing content first
+  await fetch(
+    `https://sheets.googleapis.com/v4/spreadsheets/${wbId}/values/${encodeURIComponent(GS_TAB_SUBS)}?valueRenderOption=RAW`,
+    {method:'GET',headers:{'Authorization':'Bearer '+token}}
+  );
+  await fetch(
+    `https://sheets.googleapis.com/v4/spreadsheets/${wbId}/values/${encodeURIComponent(GS_TAB_SUBS)}:clear`,
+    {method:'POST',headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'}}
+  );
+
+  // Write new data
+  const writeResp=await fetch(
+    `https://sheets.googleapis.com/v4/spreadsheets/${wbId}/values/${encodeURIComponent(GS_TAB_SUBS+'!A1')}?valueInputOption=RAW`,
+    {
+      method:'PUT',
+      headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
+      body:JSON.stringify({values:allRows})
+    }
+  );
+  if(!writeResp.ok) throw new Error('Failed to write data: '+writeResp.status);
+
+  // Format: bold header, color rows by score
+  const scoreCol=1; // column B
+  const formatRequests=[
+    {repeatCell:{
+      range:{sheetId,startRowIndex:0,endRowIndex:1},
+      cell:{userEnteredFormat:{
+        backgroundColor:{red:0.051,green:0.231,blue:0.431},
+        textFormat:{bold:true,foregroundColor:{red:1,green:1,blue:1},fontSize:10},
+        horizontalAlignment:'CENTER'
+      }},
+      fields:'userEnteredFormat(backgroundColor,textFormat,horizontalAlignment)'
+    }},
+    {autoResizeDimensions:{dimensions:{sheetId,dimension:'COLUMNS',startIndex:0,endIndex:headers.length}}}
+  ];
+
+  // Color rows by score
+  dataRows.forEach((row,i)=>{
+    const sc=row[1]||0;
+    const bg=sc>=75?{red:0.878,green:0.969,blue:0.878}:sc>=50?{red:1,green:0.965,blue:0.878}:{red:1,green:1,blue:1};
+    formatRequests.push({repeatCell:{
+      range:{sheetId,startRowIndex:i+1,endRowIndex:i+2,startColumnIndex:0,endColumnIndex:2},
+      cell:{userEnteredFormat:{backgroundColor:bg}},
+      fields:'userEnteredFormat.backgroundColor'
+    }});
+  });
+
+  await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${wbId}:batchUpdate`,{
+    method:'POST',
+    headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
+    body:JSON.stringify({requests:formatRequests})
+  });
+}
+
+// ── Push Opportunities tab (called from Shortlist) ────────────
+async function pushOppsToGoogleSheet(oppRows){
+  const clientId=getGoogleClientId();
+  if(!clientId){ showGSClientIdSetup(); return; }
+  if(!oppRows||!oppRows.length){ showDone('No shortlisted opportunities',2000); return; }
+
+  const iconEl=document.getElementById('gsIcon');
+  if(iconEl) iconEl.textContent='⟳';
+
+  const client=google.accounts.oauth2.initTokenClient({
+    client_id:clientId,
+    scope:GS_SCOPES,
+    callback:async(resp)=>{
+      if(resp.error){ showDone('Sign-in failed',2000); if(iconEl)iconEl.textContent='📊'; return; }
+      try{
+        let wbId=getMasterWbId();
+        let wbUrl=getMasterWbUrl();
+
+        if(wbId){
+          const check=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${wbId}?fields=spreadsheetId`,{headers:{'Authorization':'Bearer '+resp.access_token}});
+          if(!check.ok){ wbId=''; wbUrl=''; }
+        }
+        if(!wbId){
+          const created=await _createMasterWorkbook(resp.access_token);
+          wbId=created.id; wbUrl=created.url;
+          saveMasterWb(wbId,wbUrl);
+        }
+
+        const wbMeta=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${wbId}?fields=sheets.properties`,{headers:{'Authorization':'Bearer '+resp.access_token}}).then(r=>r.json());
+        const existing=wbMeta.sheets?.map(s=>s.properties)||[];
+        const oppTabId=await _ensureTab(wbId,GS_TAB_OPPS,existing,resp.access_token);
+
+        // Write opportunities
+        const headers=['Title','Sol Number','Agency','NAICS','Match Score','Set-Aside',
+          'Deadline','Days Left','Posted','Contact Name','Contact Email','Contact Phone',
+          'SAM.gov URL','Stage','BD Priority','Added Date'];
+        const now=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+        const rows=oppRows.map(r=>[
+          r.title||'',r.solNum||'',r.agency||'',r.naics||'',
+          (r.match||0)+'%',r.setAside||'Unrestricted',
+          fmtD(r.deadline),r.daysLeft!==null?r.daysLeft:'',fmtD(r.posted),
+          r.pocName||'',r.pocEmail||'',r.pocPhone||'',
+          r.link||'',
+          (r.match||0)>=75?'Qualified — Bid Decision':(r.match||0)>=50?'New Opportunity':'Watching',
+          (r.match||0)>=75?'High':(r.match||0)>=50?'Medium':'Low',
+          now
+        ]);
+
+        await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${wbId}/values/${encodeURIComponent(GS_TAB_OPPS)}:clear`,{method:'POST',headers:{'Authorization':'Bearer '+resp.access_token,'Content-Type':'application/json'}});
+        await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${wbId}/values/${encodeURIComponent(GS_TAB_OPPS+'!A1')}?valueInputOption=RAW`,{
+          method:'PUT',
+          headers:{'Authorization':'Bearer '+resp.access_token,'Content-Type':'application/json'},
+          body:JSON.stringify({values:[headers,...rows]})
+        });
+
+        // Format header
+        await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${wbId}:batchUpdate`,{
+          method:'POST',
+          headers:{'Authorization':'Bearer '+resp.access_token,'Content-Type':'application/json'},
+          body:JSON.stringify({requests:[{repeatCell:{
+            range:{sheetId:oppTabId,startRowIndex:0,endRowIndex:1},
+            cell:{userEnteredFormat:{backgroundColor:{red:0.18,green:0.49,blue:0.196},textFormat:{bold:true,foregroundColor:{red:1,green:1,blue:1},fontSize:10}}},
+            fields:'userEnteredFormat(backgroundColor,textFormat)'
+          }},{autoResizeDimensions:{dimensions:{sheetId:oppTabId,dimension:'COLUMNS',startIndex:0,endIndex:headers.length}}}]})
+        });
+
+        window.open(wbUrl||`https://docs.google.com/spreadsheets/d/${wbId}`,'_blank');
+        showDone('✓ '+rows.length+' opportunities pushed to "'+GS_TAB_OPPS+'" tab',4000);
+        saveMasterWb(wbId,wbUrl);
+        if(iconEl)iconEl.textContent='📊';
+      }catch(err){
+        showDone('✗ '+err.message.slice(0,80),5000);
+        if(iconEl)iconEl.textContent='📊';
+      }
+    }
+  });
+  client.requestAccessToken();
+}
+
+function showGSClientIdSetup(){
+  const existing=localStorage.getItem('google_client_id')||'';
+  const input=prompt(
+    'To use Google Sheets, enter your Google OAuth Client ID.\n\n'+
+    'Get one free at: console.cloud.google.com\n'+
+    'APIs & Services → Credentials → Create OAuth Client → Web Application\n'+
+    'Authorized origins: '+window.location.origin+'\n\n'+
+    'Paste Client ID (ends in .apps.googleusercontent.com):',
+    existing
+  );
+  if(input&&input.includes('.apps.googleusercontent.com')){
+    localStorage.setItem('google_client_id',input.trim());
+    showDone('✓ Client ID saved — click the button again',3000);
+  }else if(input){
+    showDone('✗ Invalid — must end in .apps.googleusercontent.com',3000);
+  }
+}
+
 function exportAwardees(){
   const rows=_getFilteredAwardees();
   if(!rows.length){showDone('No awardees to export with current filters',2000);return;}
@@ -1626,46 +1960,6 @@ function exportAwardees(){
   link.href=url;link.download=FIRM_NAME.replace(/\s+/g,'_')+'_Subcontractors'+_activeFilterLabel()+'_'+new Date().toISOString().slice(0,10)+'.csv';
   link.click();URL.revokeObjectURL(url);
   showDone('✓ Exported '+rows.length+' awardees'+(_activeFilterLabel()==='_all'?'':' (filtered)'),3000);
-}
-
-function exportToGoogleSheets(){
-  const rows=_getFilteredAwardees();
-  if(!rows.length){showDone('No awardees to export with current filters',2000);return;}
-  const headers=[
-    'Account Name','Industry','NAICS Code','NAICS Match','Phone','Website','Billing State',
-    'Contact Name','Title','Email',
-    'Total Contracts','Total Value ($)','Avg Contract Value ($)',
-    'Consistency (Years Active)','Latest Award Year','Primary Agency','All Agencies',
-    'Set-Asides','FAR 19.702 Eligible (>$900K)','Cert Compatible (MBE/SB)',
-    'Partnership Score (/100)','Est Sub Value ($)',
-    'Outreach Status','Outreach Date','Notes','Sample Contract Titles','Data Source'
-  ];
-  const clean=v=>'"'+String(v||'').replace(/"/g,'""')+'"';
-  const csvRows=[headers.join(',')];
-  rows.forEach(a=>{
-    const estSub=Math.round(a.tv*0.15);
-    const latestYr=a.yrs.length?Math.max(...a.yrs):'';
-    csvRows.push([
-      clean(a.name),clean(NAICS[a.topNAICS]||a.topNAICS||''),clean(a.topNAICS),clean(a.naicsMatch),
-      '','',clean(a.topState),
-      '','','',
-      a.cnt,Math.round(a.tv),a.avgValue,
-      a.consistency,latestYr,clean(a.topAgency),
-      clean(a.agencies.join('; ')),clean(a.setAsides.join('; ')),
-      a.farEligible?'Yes':'No',a.certOK?'Yes':'Check',
-      a.score,estSub,
-      'Not Contacted','','',
-      clean(a.contracts.slice(0,3).map(r=>r.title||'').filter(Boolean).join(' | ')),
-      clean('SAM.gov — Opportunity Pipeline — '+new Date().toISOString().slice(0,10))
-    ].join(','));
-  });
-  const csv=csvRows.join('\n');
-  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
-  const url=URL.createObjectURL(blob);
-  const link=document.createElement('a');
-  link.href=url;link.download=FIRM_NAME.replace(/\s+/g,'_')+'_ZohoCRM'+_activeFilterLabel()+'_'+new Date().toISOString().slice(0,10)+'.csv';
-  link.click();URL.revokeObjectURL(url);
-  showDone('✓ Exported '+rows.length+' awardees to Sheets/Zoho'+(_activeFilterLabel()==='_all'?'':' (filtered)'),3500);
 }
 
 function resetSF(){
@@ -2751,6 +3045,9 @@ function openDr(){
   // Load firm profile
   const fn=document.getElementById('drFirmName');if(fn)fn.value=FIRM_NAME||'';
   const fu=document.getElementById('drFirmUrl');if(fu)fu.value=FIRM_URL!=='https://ugsconsulting.com'?FIRM_URL:'';
+  const gcid=document.getElementById('drGoogleClientId');if(gcid){const savedCid=localStorage.getItem('google_client_id')||'';if(savedCid)gcid.value=savedCid;}
+  const gsWbUrl=getMasterWbUrl();const gsWrap=document.getElementById('drGSLinkWrap');const gsLnk=document.getElementById('drGSLink');
+  if(gsWrap&&gsLnk&&gsWbUrl){gsWrap.style.display='block';gsLnk.href=gsWbUrl;gsLnk.textContent=gsWbUrl.slice(0,50)+'...';}
   const gk=document.getElementById('drGroqKey');if(gk){const saved=localStorage.getItem('groq_api_key')||'';if(saved)gk.value=saved;}
   const su=document.getElementById('drSheetsUrl');if(su){const savedUrl=localStorage.getItem('sheets_url')||'';if(savedUrl)su.value=savedUrl;}
   const fl=document.getElementById('drFirmLogo');if(fl)fl.value=FIRM_LOGO&&!FIRM_LOGO.includes('ugsconsulting.com')?FIRM_LOGO:'';
@@ -3367,213 +3664,6 @@ function rInsights(){
 }
 
 
-
-function showSheetsSetup(){
-  const steps=`FULL PIPELINE SETUP
-
-━━━ STEP 1: GOOGLE APPS SCRIPT ━━━
-
-1. Create new Google Sheet: "UGS Opportunity Pipeline"
-2. Extensions → Apps Script → paste the .gs file
-   (Download: UGS_Pipeline_AppsScript.gs)
-3. Line 7: paste your Groq API key
-4. Save → Deploy → New deployment
-   Type: Web app | Execute as: Me | Access: Anyone
-5. Copy the Web App URL
-6. Paste into My Profile → Google Sheets Web App URL
-
-━━━ STEP 2: ZOHO DATAPREP ━━━
-
-1. dataprep.zoho.com → New Workspace
-2. Import → Google Sheets → connect account
-3. Select "UGS Opportunity Pipeline" → "Pipeline" tab
-4. Map columns to Zoho CRM Deal fields:
-   Deal_Name     → Deal Name
-   Account_Name  → Account Name
-   Stage         → Stage
-   Amount        → Amount
-   Closing_Date  → Closing Date
-   Contact_Email → Email
-   BD_Priority   → Priority
-5. Schedule: Daily sync
-6. Run first sync → check Zoho CRM Deals
-
-━━━ WHAT THE SCRIPT DOES ━━━
-
-✓ Cleans agency names (DEPT OF DEFENSE → DoD)
-✓ Standardizes phone numbers (XXX-XXX-XXXX)
-✓ Normalizes set-aside labels
-✓ Formats dates for Zoho (MM/DD/YYYY)
-✓ Uses Groq AI to find missing emails/phones
-✓ Logs all enrichment attempts
-✓ Color-codes rows by BD Priority
-✓ Creates 3 sheets: Raw Import, Pipeline, Enrichment Log`;
-  alert(steps);
-}
-
-
-async function pushToGoogleSheets(){
-  const sheetsUrl=localStorage.getItem('sheets_url')||'';
-  const iconEl=document.getElementById('gsIcon');
-
-  if(!sheetsUrl){
-    showSheetsSetup();
-    return;
-  }
-
-  const list=getShortlistedOpps();
-  if(!list.length){showDone('No shortlisted opportunities to push',2500);return;}
-
-  if(iconEl)iconEl.textContent='⟳';
-  showDone('Pushing '+list.length+' opportunities to Google Sheets → Zoho CRM...',8000);
-
-  // ── Zoho CRM compatible column names ──
-  // These match Zoho CRM Deal field names for direct DataPrep sync
-  const headers=[
-    'Deal_Name',           // Contract title
-    'Account_Name',        // Agency
-    'Stage',               // Derived from match score
-    'Amount',              // Estimated contract value
-    'Closing_Date',        // SAM.gov deadline
-    'Pipeline_Source',     // Always "SAM.gov Opportunity"
-    'Lead_Source',         // Always "SAM.gov"
-    'Description',         // Contract description snippet
-    // Custom fields (set up in Zoho CRM custom fields)
-    'Sol_Number',
-    'NAICS_Code',
-    'NAICS_Description',
-    'Match_Score',
-    'Set_Aside_Type',
-    'Days_to_Deadline',
-    'Posted_Date',
-    'Contact_Name',
-    'Contact_Email',
-    'Contact_Phone',
-    'Clearance_Required',
-    'Age_Requirement',
-    'SAM_URL',
-    'BD_Priority',         // High/Medium/Low from match score
-    'Synced_At'
-  ];
-
-  const now=new Date().toISOString().slice(0,16).replace('T',' ');
-
-  const rows=list.map(r=>{
-    // Derive stage from match score
-    const stage=r.match>=75?'Qualified — Bid Decision':
-                r.match>=50?'New Opportunity — Review':
-                'Watching — Low Match';
-
-    // Derive BD priority
-    const priority=r.match>=75?'High':r.match>=50?'Medium':'Low';
-
-    // Estimated value (from award data if available, else blank)
-    const amt=r.amount&&r.amount>0?Math.round(r.amount):'';
-
-    // Deadline formatted for Zoho (MM/DD/YYYY)
-    let closingDate='';
-    if(r.deadline){
-      const pd=parseDate(r.deadline);
-      if(pd)closingDate=(pd.getMonth()+1)+'/'+(pd.getDate())+'/'+pd.getFullYear();
-    }
-
-    // Posted date
-    let postedDate='';
-    if(r.posted){
-      const pd=parseDate(r.posted);
-      if(pd)postedDate=(pd.getMonth()+1)+'/'+(pd.getDate())+'/'+pd.getFullYear();
-    }
-
-    return[
-      r.title||'',
-      r.agency||'',
-      stage,
-      amt,
-      closingDate,
-      'SAM.gov Opportunity',
-      'SAM.gov',
-      (r.desc||'').slice(0,300),
-      r.solNum||'',
-      r.naics||'',
-      NAICS[r.naics]||'',
-      r.match+'%',
-      r.setAside||'Unrestricted',
-      r.daysLeft!==null?r.daysLeft:'',
-      postedDate,
-      r.pocName||'',
-      r.pocEmail||'',
-      r.pocPhone||'',
-      r.clearance?'Yes':'No',
-      r.ageReq||'None',
-      r.link||'',
-      priority,
-      now
-    ];
-  });
-
-  try{
-    const resp=await fetch(sheetsUrl,{
-      method:'POST',
-      headers:{'Content-Type':'text/plain'},
-      body:JSON.stringify({clear:true,headers,rows})
-    });
-    const result=await resp.json().catch(()=>({ok:false,error:'Invalid response from Apps Script'}));
-    if(result.ok){
-      if(iconEl)iconEl.textContent='✓';
-      showDone('✓ '+rows.length+' deals pushed → Google Sheets → ready for Zoho DataPrep sync',5000);
-      setTimeout(()=>{if(iconEl)iconEl.textContent='📊';},5500);
-    }else{
-      throw new Error(result.error||'Push failed');
-    }
-  }catch(err){
-    if(iconEl)iconEl.textContent='📊';
-    const msg=err.message.includes('Failed to fetch')||err.message.includes('NetworkError')
-      ?'Cannot reach Apps Script URL — check My Profile → Google Sheets URL and ensure "Who has access: Anyone"'
-      :'Error: '+err.message.slice(0,100);
-    showDone('✗ '+msg,6000);
-  }
-}
-
-
-function toggleShortlist(nid){
-  if(!nid)return;
-  if(shortlist.has(nid)){
-    shortlist.delete(nid);
-  }else{
-    shortlist.add(nid);
-    // Animate
-    const btn=document.getElementById('slBtn_'+nid);
-    if(btn){btn.style.transform='scale(1.4)';setTimeout(()=>btn.style.transform='',200);}
-  }
-  updateShortlistBtn(nid);
-  updateShortlistBadge();
-}
-
-function updateShortlistBtn(nid){
-  const btn=document.getElementById('slBtn_'+nid);
-  if(!btn)return;
-  const inList=shortlist.has(nid);
-  btn.textContent=inList?'★':'☆';
-  btn.style.color=inList?'#B89030':'var(--t4)';
-  btn.title=inList?'Remove from shortlist':'Add to shortlist';
-}
-
-function updateShortlistBadge(){
-  const badge=document.getElementById('shortlistBadge');
-  const btn=document.getElementById('shortlistBtn');
-  const count=shortlist.size;
-  if(badge)badge.textContent=count;
-  if(btn)btn.style.display=count>0?'':'none';
-}
-
-function getShortlistedOpps(){
-  const all=[...opps,...allOpps];
-  const seen=new Set();
-  return [...shortlist].map(nid=>all.find(r=>r.nid===nid)).filter(r=>{
-    if(!r||seen.has(r.nid))return false;
-    seen.add(r.nid);return true;
-  });
-}
 
 function renderShortlist(){
   const list=getShortlistedOpps();
