@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Opportunity Pipeline v40</title>
+<title>Opportunity Pipeline v41</title>
 <link rel="icon" href="https://ugsconsulting.com/wp-content/uploads/2026/05/cropped-UGSLogo-32x32.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
@@ -421,6 +421,13 @@
         <option value="">Any NAICS match</option>
         <option value="exact">Exact match only</option>
         <option value="adjacent">Adjacent match</option>
+      </select>
+      <select class="fs" id="sFscore" onchange="rebuildPIList()" title="Filter by Partnership Score">
+        <option value="">Any score</option>
+        <option value="75">★★★ Strong (75%+)</option>
+        <option value="50">★★ Good (50%+)</option>
+        <option value="30">★ Partial (30%+)</option>
+        <option value="0_30">Weak only (&lt;30%)</option>
       </select>
       <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--t2);cursor:pointer">
         <input type="checkbox" id="sFfar" onchange="rebuildPIList()"> FAR 19.702 only
@@ -1297,7 +1304,7 @@ function obSave(){
 }
 function obSaveAndUpload(){obSave();document.getElementById('cf').click();}
 function enterDash(){
-  ['sSrch','sFcnt','sFnaicsMatch','sFyr','sFmo'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['sSrch','sFcnt','sFnaicsMatch','sFyr','sFmo','sFscore'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   ['sFn','sFs','sFag','sFsa'].forEach(id=>clearMD(id));clearValFilter();
   const ffar=document.getElementById('sFfar');if(ffar)ffar.checked=false;
   _piCatFilter=null;
@@ -1519,13 +1526,12 @@ function _getFilteredAwardees(){
   const awMap={};
   src.forEach(r=>{
     if(!r.awardee)return;
-    if(fn&&r.naics!==fn)return;
+    if(fn.length&&!fn.some(v=>r.naics===v.split(' — ')[0].trim()))return;
+    if(fs.length&&!fs.includes(r.workState))return;
+    if(fag.length&&!fag.includes(r.agency))return;
+    if(fsa.length&&!fsa.includes(r.setAside))return;
     if(fyr){const pd2=parseDate(r.awardDate||'');if(!pd2||pd2.getFullYear()!==parseInt(fyr))return;}
     if(fmo){const pd2=parseDate(r.awardDate||'');if(!pd2||pd2.getMonth()+1!==fmo)return;}
-    if(fs&&r.workState!==fs)return;
-    if(fag&&r.agency!==fag)return;
-    if(fsa&&r.setAside!==fsa)return;
-    if(fyr){const pd=parseDate(r.awardDate);if(!pd||pd.getFullYear()!==parseInt(fyr))return;}
     const n=r.awardee;
     if(!awMap[n])awMap[n]={name:n,tv:0,cnt:0,yrs:new Set(),naics:{},ag:[],st:[],sa:[],cx:[]};
     const a=awMap[n];
@@ -1564,6 +1570,10 @@ function _getFilteredAwardees(){
   if(fcnt>0)list=list.filter(a=>a.cnt>=fcnt);
   if(fnaics)list=list.filter(a=>a.naicsMatch===fnaics);
   if(ffar)list=list.filter(a=>a.farEligible);
+  if(_piCatFilter!==null){list=list.filter(a=>{const cc=a.consistency||1;return _piCatFilter===4?cc>=4:cc===_piCatFilter;});}
+  const fscoreVal2=document.getElementById('sFscore')?.value||'';
+  if(fscoreVal2==='0_30')list=list.filter(a=>(a.score||0)<30);
+  else if(fscoreVal2)list=list.filter(a=>(a.score||0)>=parseInt(fscoreVal2));
   if(srch)list=list.filter(a=>a.name.toLowerCase().includes(srch));
   list.sort((a,b)=>b.score-a.score);
   return list;
@@ -1659,7 +1669,7 @@ function exportToGoogleSheets(){
 }
 
 function resetSF(){
-  ['sSrch','sFcnt','sFnaicsMatch','sFyr','sFmo'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['sSrch','sFcnt','sFnaicsMatch','sFyr','sFmo','sFscore'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   ['sFn','sFs','sFag','sFsa'].forEach(id=>clearMD(id));clearValFilter();
   const ffar=document.getElementById('sFfar');if(ffar)ffar.checked=false;
   _piCatFilter=null;
@@ -1851,6 +1861,9 @@ function rebuildPIList(){
   if(fnaics)list=list.filter(a=>a.mt===fnaics);
   if(ffar)list=list.filter(a=>a.far);
   if(_piCatFilter!==null){list=list.filter(a=>{const c=a.cons||a.consistency||1;return _piCatFilter===4?c>=4:c===_piCatFilter;});}
+  const fscoreVal=document.getElementById('sFscore')?.value||'';
+  if(fscoreVal==='0_30')list=list.filter(a=>(a.sc||0)<30);
+  else if(fscoreVal)list=list.filter(a=>(a.sc||0)>=parseInt(fscoreVal));
   if(srch)list=list.filter(a=>a.name.toLowerCase().includes(srch));
   list.sort((a,b)=>{
     const kmap={score:'sc',tv:'tv',cnt:'cnt',consistency:'cons',name:'name'};
