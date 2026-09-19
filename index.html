@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Opportunity Pipeline v43</title>
+<title>Opportunity Pipeline v45</title>
 <link rel="icon" href="https://ugsconsulting.com/wp-content/uploads/2026/05/cropped-UGSLogo-32x32.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
@@ -442,17 +442,17 @@
       <table style="width:100%;border-collapse:collapse;font-size:11px">
         <thead style="position:sticky;top:0;z-index:10">
           <tr style="background:var(--bdr2);border-bottom:1px solid var(--bdr)">
-            <th onclick="sortPITable('score')" style="padding:7px 10px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#1A6FB5;cursor:pointer;white-space:nowrap">Score ↓</th>
-            <th onclick="sortPITable('name')" style="padding:7px 10px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);cursor:pointer">Company ↕</th>
-            <th onclick="sortPITable('tv')" style="padding:7px 10px;text-align:right;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);cursor:pointer;white-space:nowrap">Total value ↕</th>
-            <th onclick="sortPITable('cnt')" style="padding:7px 10px;text-align:center;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);cursor:pointer">Contracts</th>
-            <th onclick="sortPITable('latestYr')" style="padding:7px 10px;text-align:center;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);cursor:pointer;white-space:nowrap" title="Most recent award date">Latest Award ↕</th>
-            <th onclick="sortPITable('consistency')" style="padding:7px 10px;text-align:center;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);cursor:pointer">Years</th>
-            <th style="padding:7px 10px;text-align:center;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--t3)">NAICS</th>
-            <th style="padding:7px 10px;text-align:center;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--t3)">FAR 19.702</th>
-            <th style="padding:7px 10px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--t3)">Set-aside</th>
-            <th style="padding:7px 10px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--t3)">Agency</th>
-            <th style="padding:7px 10px;text-align:center;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--t3)">State</th>
+            <th onclick="sortPITable('score')" id="pith_score" style="padding:7px 10px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#1A6FB5;cursor:pointer;white-space:nowrap">Score ↓</th>
+            <th onclick="sortPITable('name')" id="pith_name" style="padding:7px 10px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);cursor:pointer">Company ↕</th>
+            <th onclick="sortPITable('tv')" id="pith_tv" style="padding:7px 10px;text-align:right;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);cursor:pointer;white-space:nowrap">Total value ↕</th>
+            <th onclick="sortPITable('cnt')" id="pith_cnt" style="padding:7px 10px;text-align:center;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);cursor:pointer">Contracts</th>
+            <th onclick="sortPITable('latestYr')" id="pith_latestYr" style="padding:7px 10px;text-align:center;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);cursor:pointer;white-space:nowrap" title="Most recent award date">Latest Award ↕</th>
+            <th onclick="sortPITable('consistency')" id="pith_consistency" style="padding:7px 10px;text-align:center;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);cursor:pointer">Years</th>
+            <th onclick="sortPITable('mt')" style="padding:7px 10px;text-align:center;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);cursor:pointer" id="pith_mt">NAICS ↕</th>
+            <th onclick="sortPITable('far')" style="padding:7px 10px;text-align:center;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);cursor:pointer" id="pith_far">FAR 19.702 ↕</th>
+            <th onclick="sortPITable('sa')" style="padding:7px 10px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);cursor:pointer" id="pith_sa">Set-aside ↕</th>
+            <th onclick="sortPITable('ag')" style="padding:7px 10px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);cursor:pointer" id="pith_ag">Agency ↕</th>
+            <th onclick="sortPITable('st')" style="padding:7px 10px;text-align:center;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);cursor:pointer" id="pith_st">State ↕</th>
           </tr>
         </thead>
         <tbody id="piTableBody">
@@ -1365,7 +1365,17 @@ function buildCharts(){
 function rc(id,type,labels,data,opts){if(charts[id])charts[id].destroy();const ctx=document.getElementById(id);if(!ctx)return;const cl=['#0D3B6E','#1A6FB5','#5BA4D9','#8DC5E8','#B8D9F0','#2E7D52','#6ABF8A','#A3D9B8','#6B7280','#9CA3AF','#D1D5DB','#E5E7EB'];
   const customColors=opts?.colors||null;const isPie=type==='pie'||type==='doughnut';const pls=isPie&&window.ChartDataLabels?[ChartDataLabels]:[];
   charts[id]=new Chart(ctx,{type,data:{labels,datasets:[{data,backgroundColor:customColors||(isPie?cl:'#1A6FB5'),borderWidth:isPie?2:0,borderColor:isPie?'#fff':undefined,borderRadius:type==='bar'?4:0}]},plugins:pls,options:{responsive:true,maintainAspectRatio:false,indexAxis:type==='bar'?'y':undefined,plugins:{legend:{display:isPie,position:'bottom',labels:{font:{size:10},padding:12,usePointStyle:true,pointStyle:'rectRounded'}},tooltip:{callbacks:{label:ctx2=>{const v=ctx2.parsed?.y??ctx2.parsed??ctx2.raw;if(isPie){const tot=ctx2.dataset.data.reduce((a,b)=>a+b,0);return' '+fmtV(v)+' ('+Math.round(v/tot*100)+'%)'}if(typeof v==='number'&&v>1000)return' '+fmtV(v);return' '+v}}},datalabels:isPie?{color:'#fff',font:{weight:'bold',size:11},formatter:(v,c)=>{const tot=c.dataset.data.reduce((a,b)=>a+b,0);const p=Math.round(v/tot*100);return p>=5?p+'%':''},anchor:'center',align:'center'}:{display:false}},scales:type==='bar'?{x:{ticks:{font:{size:9},callback:v=>fmtV(v)},grid:{color:'rgba(0,0,0,.04)'}},y:{ticks:{font:{size:10}},grid:{color:'rgba(0,0,0,.02)'}}}:undefined}})}
-function populateF(data,nId,sId,saId,agId){const pop=(id,vals,ph)=>{const el=document.getElementById(id);if(!el||el.options.length>1)return;el.innerHTML=`<option value="">${ph}</option>`;[...new Set(vals.filter(Boolean))].sort().forEach(v=>{el.innerHTML+=`<option value="${esc(v)}">${v.length>40?v.slice(0,37)+'…':v}</option>`})};pop(nId,data.map(r=>r.naics),'All NAICS');pop(sId,data.map(r=>r.workState),'All States');if(saId)pop(saId,data.map(r=>r.setAside),'All Set-Asides');if(agId)pop(agId,data.map(r=>r.agency),'All Agencies')}
+function populateF(data,nId,sId,saId,agId){
+  // Populate multi-select dropdowns with values from data
+  const naics=[...new Set(data.map(r=>r.naics).filter(Boolean))].sort().map(n=>n+(NAICS[n]?' — '+NAICS[n].slice(0,20):''));
+  const states=[...new Set(data.map(r=>r.workState).filter(Boolean))].sort();
+  const agencies=[...new Set(data.map(r=>r.agency).filter(Boolean))].sort();
+  const setasides=[...new Set(data.map(r=>r.setAside).filter(Boolean))].sort();
+  populateMD(nId,naics,'All NAICS');
+  populateMD(sId,states,'All States');
+  if(agId)populateMD(agId,agencies,'All Agencies');
+  if(saId)populateMD(saId,setasides,'All Set-Asides');
+}
 function sO(col){if(oSrt===col)oDir*=-1;else{oSrt=col;oDir=-1}oPage=1;rOpps()}
 function getFilteredOpps(){
   const src=ugsOnly?opps:allOpps;
@@ -1971,7 +1981,29 @@ function resetSF(){
   sPage=1;piPage=1;rSubs();rebuildPIList();
   showDone('✓ All filters cleared',1500);
 }
-function sortPITable(col){if(piSort===col)piDir*=-1;else{piSort=col;piDir=-1;}piPage=1;rebuildPIList();}
+function sortPITable(col){
+  if(piSort===col)piDir*=-1;
+  else{piSort=col;piDir=-1;}
+  piPage=1;
+  // Update header arrows
+  const cols=['score','name','tv','cnt','latestYr','consistency','mt','far','sa','ag','st'];
+  const labels={score:'Score',name:'Company',tv:'Total value',cnt:'Contracts',
+    latestYr:'Latest Award',consistency:'Years',mt:'NAICS',far:'FAR 19.702',
+    sa:'Set-aside',ag:'Agency',st:'State'};
+  cols.forEach(c=>{
+    const el=document.getElementById('pith_'+c);
+    if(!el)return;
+    const base=labels[c]||c;
+    if(c===piSort){
+      el.textContent=base+(piDir===-1?' ↓':' ↑');
+      el.style.color='#1A6FB5';
+    }else{
+      el.textContent=base+' ↕';
+      el.style.color='var(--t3)';
+    }
+  });
+  rebuildPIList();
+}
 
 
 const _piMatchNAICS=naics=>{
@@ -2160,7 +2192,7 @@ function rebuildPIList(){
   else if(fscoreVal)list=list.filter(a=>(a.sc||0)>=parseInt(fscoreVal));
   if(srch)list=list.filter(a=>a.name.toLowerCase().includes(srch));
   list.sort((a,b)=>{
-    const kmap={score:'sc',tv:'tv',cnt:'cnt',consistency:'cons',name:'name'};
+    const kmap={score:'sc',tv:'tv',cnt:'cnt',consistency:'cons',name:'name',mt:'mt',far:'far',sa:'sa',ag:'ag',st:'st',latestYr:'latestYr'};
     const k=kmap[piSort]||piSort;
     const va=a[k]??0,vb2=b[k]??0;
     if(typeof va==='string')return va.localeCompare(vb2)*piDir;
@@ -2450,8 +2482,7 @@ function rSubs(){
   try{
   const src=ugsOnlyS?awards:allAwards;
   // Force-reset filter dropdowns so populateF always repopulates with current data
-  ['sFn','sFs','sFag'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='<option value=""></option>';});
-  populateF(src,'sFn','sFs',null,'sFag');
+  populateF(src,'sFn','sFs','sFsa','sFag');
 
   // Populate year filter
   const sFyr=document.getElementById('sFyr');
