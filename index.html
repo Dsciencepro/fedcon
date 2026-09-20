@@ -1652,31 +1652,43 @@ async function createGoogleSheet(){
   if(lbl)lbl.textContent='Pushing to sheet...';
 
   const headers=[
-    'Company Name','Partnership Score','NAICS Match','Top NAICS','NAICS Description',
-    'Total Contracts','Total Value ($)','Avg Contract ($)','Years Active',
-    'Latest Award','FAR 19.702','Primary Agency','Primary State','Set-Asides',
+    'Company Name','Partnership Score','Score Tier','NAICS Match','Top NAICS Code','NAICS Description',
+    'All NAICS Codes','Total Contracts','Total Value ($)','Avg Contract ($)','Years Active',
+    'Latest Award','FAR 19.702','Cert Compatible',
+    'Primary Set-Aside','All Set-Asides','Primary Agency','All Agencies','Primary State','All States',
+    'Est Subcontract Value ($)',
     'BD Contact Name','BD Email','BD Phone','BD LinkedIn',
     'Company Website','Outreach Status','Last Updated'
   ];
 
   const now=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
-  const dataRows=rows.map(a=>[
+  const dataRows=rows.map(a=>{
+    const tier=(a.score||0)>=75?'Strong':(a.score||0)>=50?'Good':(a.score||0)>=30?'Moderate':'Low';
+    const allNaics=[...new Set((a.contracts||[]).map(r=>r.naics).filter(Boolean))].join('; ');
+    return[
     a.name||'',
-    a.score||a.sc||0,
-    a.ml||'',
-    a.tn||'',
-    (a.tn&&NAICS[a.tn])?NAICS[a.tn]:'',
+    a.score||0,
+    tier,
+    a.naicsLabel||'',
+    a.topNAICS||'',
+    (a.topNAICS&&NAICS[a.topNAICS])?NAICS[a.topNAICS]:'',
+    allNaics,
     a.cnt||0,
     Math.round(a.tv||0),
     Math.round((a.tv||0)/Math.max(a.cnt||1,1)),
-    a.consistency||a.cons||1,
-    a.latestAwardMonthYear||a.latestYr||'',
-    (a.far||a.farEligible)?'Yes':'No',
-    a.ag||'',
-    a.st||'',
-    (a.sas||[]).join('; '),
+    a.consistency||1,
+    a.latestAwardMonthYear||'',
+    a.farEligible?'Yes':'No',
+    a.certOK?'Yes':'Check',
+    (a.setAsides||[])[0]||'',
+    (a.setAsides||[]).join('; '),
+    a.topAgency||'',
+    (a.agencies||[]).join('; '),
+    a.topState||'',
+    (a.states||[]).join('; '),
+    Math.round((a.tv||0)*0.15),
     '','','','','','Not contacted',now
-  ]);
+  ]});
 
   try{
     const resp=await fetch(url,{
