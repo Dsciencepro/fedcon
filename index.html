@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Opportunity Pipeline v51</title>
+<title>Opportunity Pipeline v52</title>
 <link rel="icon" href="https://ugsconsulting.com/wp-content/uploads/2026/05/cropped-UGSLogo-32x32.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
@@ -339,7 +339,7 @@
       <select class="fs" id="sFmo" onchange="rebuildPIList()"><option value="">All months</option></select>
       <div style="position:relative;display:inline-block">
         <button id="sFnBtn" onclick="toggleMD('sFn')" class="fs" style="min-width:120px;text-align:left;display:flex;align-items:center;justify-content:space-between;gap:6px;cursor:pointer">
-          <span id="sFnLabel">All NAICS</span><span style="font-size:9px;opacity:.6">▼</span>
+          <span id="sFnLabel" data-all-label="All NAICS">All NAICS</span><span style="font-size:9px;opacity:.6">▼</span>
         </button>
         <div id="sFnDropdown" style="display:none;position:absolute;top:100%;left:0;z-index:300;background:var(--card);border:1px solid var(--bdr);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.12);padding:8px;min-width:200px;max-height:260px;overflow-y:auto;margin-top:2px">
           <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);margin-bottom:6px;padding:0 4px">All NAICS (multi-select)</div>
@@ -352,7 +352,7 @@
       </div>
       <div style="position:relative;display:inline-block">
         <button id="sFsBtn" onclick="toggleMD('sFs')" class="fs" style="min-width:100px;text-align:left;display:flex;align-items:center;justify-content:space-between;gap:6px;cursor:pointer">
-          <span id="sFsLabel">All States</span><span style="font-size:9px;opacity:.6">▼</span>
+          <span id="sFsLabel" data-all-label="All States">All States</span><span style="font-size:9px;opacity:.6">▼</span>
         </button>
         <div id="sFsDropdown" style="display:none;position:absolute;top:100%;left:0;z-index:300;background:var(--card);border:1px solid var(--bdr);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.12);padding:8px;min-width:200px;max-height:260px;overflow-y:auto;margin-top:2px">
           <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);margin-bottom:6px;padding:0 4px">All States (multi-select)</div>
@@ -365,7 +365,7 @@
       </div>
       <div style="position:relative;display:inline-block">
         <button id="sFagBtn" onclick="toggleMD('sFag')" class="fs" style="min-width:140px;text-align:left;display:flex;align-items:center;justify-content:space-between;gap:6px;cursor:pointer">
-          <span id="sFagLabel">All Agencies</span><span style="font-size:9px;opacity:.6">▼</span>
+          <span id="sFagLabel" data-all-label="All Agencies">All Agencies</span><span style="font-size:9px;opacity:.6">▼</span>
         </button>
         <div id="sFagDropdown" style="display:none;position:absolute;top:100%;left:0;z-index:300;background:var(--card);border:1px solid var(--bdr);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.12);padding:8px;min-width:200px;max-height:260px;overflow-y:auto;margin-top:2px">
           <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);margin-bottom:6px;padding:0 4px">All Agencies (multi-select)</div>
@@ -378,7 +378,7 @@
       </div>
       <div style="position:relative;display:inline-block">
         <button id="sFsaBtn" onclick="toggleMD('sFsa')" class="fs" style="min-width:130px;text-align:left;display:flex;align-items:center;justify-content:space-between;gap:6px;cursor:pointer">
-          <span id="sFsaLabel">All Set-Asides</span><span style="font-size:9px;opacity:.6">▼</span>
+          <span id="sFsaLabel" data-all-label="All Set-Asides">All Set-Asides</span><span style="font-size:9px;opacity:.6">▼</span>
         </button>
         <div id="sFsaDropdown" style="display:none;position:absolute;top:100%;left:0;z-index:300;background:var(--card);border:1px solid var(--bdr);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.12);padding:8px;min-width:200px;max-height:260px;overflow-y:auto;margin-top:2px">
           <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);margin-bottom:6px;padding:0 4px">All Set-Asides (multi-select)</div>
@@ -1323,7 +1323,7 @@ function enterDash(){
 }
 function go(p){const pages=['opps','subs','insights','proscore','about'];document.querySelectorAll('.hdr-nav button').forEach((b,i)=>b.classList.toggle('active',pages[i]===p));['pOpps','pSubs','pInsights','pProscore','pAbout','pShortlist'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.toggle('hidden',id!=='p'+p.charAt(0).toUpperCase()+p.slice(1)&&id!=='pShortlist'||(id==='pShortlist'&&p!=='shortlist'))});if(p==='subs')rSubs();if(p==='insights')rInsights();if(p==='proscore')renderProscore();if(p==='shortlist')renderShortlist();}
 function setUGS(v){showLoading(v?"Filtering to "+FIRM_NAME+" NAICS codes...":"Loading all NAICS data...","Rescoring opportunities");setTimeout(()=>{try{ugsOnly=v;document.getElementById('togUGS').classList.toggle('active',v);document.getElementById('togAll').classList.toggle('active',!v);document.getElementById("oFn").innerHTML="<option value=\"\">All NAICS</option>";oPage=1;buildCharts();rOpps();showDone(v?"Filtered to "+FIRM_NAME+" NAICS · "+opps.length+" opportunities":"Showing all NAICS · "+allOpps.length+" opportunities");}catch(e){console.error('setUGS error',e)}finally{hideLoading()}},30)}
-function setUGSs(v){showLoading(v?'Filtering subcontracting to '+FIRM_NAME+' NAICS...':'Loading all NAICS awardees...','Building awardee intelligence');setTimeout(()=>{try{ugsOnlyS=v;document.getElementById('togUGSs').classList.toggle('active',v);document.getElementById('togAlls').classList.toggle('active',!v);document.getElementById('sFn').innerHTML='<option value="">All NAICS</option>';sPage=1;rSubs();showDone(v?FIRM_NAME+' NAICS filter applied · '+awards.length+' awards':'All NAICS loaded · '+allAwards.length+' awards');}catch(e){console.error('setUGSs error',e)}finally{hideLoading()}},30)}
+function setUGSs(v){showLoading(v?'Filtering subcontracting to '+FIRM_NAME+' NAICS...':'Loading all NAICS awardees...','Building awardee intelligence');setTimeout(()=>{try{ugsOnlyS=v;document.getElementById('togUGSs').classList.toggle('active',v);document.getElementById('togAlls').classList.toggle('active',!v);const nOpts=document.getElementById('sFnOptions');if(nOpts)nOpts.innerHTML='';const nLbl=document.getElementById('sFnLabel');if(nLbl)nLbl.textContent=nLbl.dataset.allLabel||'All NAICS';sPage=1;rSubs();showDone(v?FIRM_NAME+' NAICS filter applied · '+awards.length+' awards':'All NAICS loaded · '+allAwards.length+' awards');}catch(e){console.error('setUGSs error',e)}finally{hideLoading()}},30)}
 function updateBadge(){
   const uo=opps.length,to=allOpps.length,pct=to>0?((uo/to)*100).toFixed(1):0;
   // Guard against epoch date (Jan 1 1970)
@@ -1583,7 +1583,7 @@ function _getFilteredAwardees(){
       agencies:a.ag,states:a.st,setAsides:a.sa,yrs:sortedYrs,latestYr,latestAwardDate,latestAwardMonthYear,contracts:a.cx};
   });
   // Apply filters
-  if(fval.length){list=list.filter(a=>fval.some(v=>vb[v]&&a.tv/Math.max(a.cnt,1)>=vb[v][0]&&a.tv/Math.max(a.cnt,1)<vb[v][1]));}
+  if(fval.length){list=list.filter(a=>fval.some(v=>vb[v]&&a.tv>=vb[v][0]&&a.tv<vb[v][1]));}
   if(fcnt>0)list=list.filter(a=>a.cnt>=fcnt);
   if(fnaics)list=list.filter(a=>a.naicsMatch===fnaics);
   if(ffar)list=list.filter(a=>a.farEligible);
@@ -1599,10 +1599,10 @@ function _getFilteredAwardees(){
 function _activeFilterLabel(){
   const parts=[];
   const fyr=document.getElementById('sFyr')?.value;if(fyr)parts.push('Year:'+fyr);
-  const fn=document.getElementById('sFn')?.value;if(fn)parts.push('NAICS:'+fn);
-  const fs=document.getElementById('sFs')?.value;if(fs)parts.push('State:'+fs);
-  const fag=document.getElementById('sFag')?.value;if(fag)parts.push('Agency:'+fag.slice(0,20));
-  const fsa=document.getElementById('sFsa')?.value;if(fsa)parts.push('SA:'+fsa.slice(0,15).replace(/\s/g,'_'));
+  const fn=getMD('sFn');if(fn.length)parts.push('NAICS:'+fn[0]);
+  const fs=getMD('sFs');if(fs.length)parts.push('State:'+fs[0]);
+  const fag=getMD('sFag');if(fag.length)parts.push('Agency:'+(fag[0]||'').slice(0,20));
+  const fsa=getMD('sFsa');if(fsa.length)parts.push('SA:'+(fsa[0]||'').slice(0,15).replace(/\s/g,'_'));
   const fval=getValFilter();
   const valLabels={xs:'Under$1M',sm:'$1M-$3M',md:'$3M-$5M',lg:'$5M-$10M',xl:'$10M-$50M',xxl:'$50M+'};
   if(fval.length)parts.push(fval.map(v=>valLabels[v]||v).join('+'));
@@ -1765,27 +1765,49 @@ function showGSScriptSetup(){
 function exportAwardees(){
   const rows=_getFilteredAwardees();
   if(!rows.length){showDone('No awardees to export with current filters',2000);return;}
-  const headers=['Rank','Company Name','Top NAICS','NAICS Description','NAICS Match',
-    'Total Contracts','Total Value ($)','Avg Contract Value ($)','Consistency (Years Active)',
-    'Latest Award (Month-Year)','Latest Award (Full Date)','Primary Agency','All Agencies','States','Set-Asides',
-    'FAR 19.702 Eligible (>$900K)','Cert Compatible','Partnership Score (/100)',
-    'Est Sub Value ($)','Sample Contract Titles'];
-  const clean=v=>'"'+String(v||'').replace(/"/g,'""')+'"';
-  const csvRows=[headers.join(',')];
+  const headers=[
+    'Rank','Company Name',
+    'Partnership Score','Score Tier',
+    'Top NAICS Code','Top NAICS Description','All NAICS Codes','NAICS Match',
+    'Total Contracts','Total Value ($)','Avg Contract Value ($)',
+    'Consistency (Years Active)','Years Active List',
+    'Latest Award Date','Latest Award Month-Year',
+    'FAR 19.702 Eligible','Cert Compatible',
+    'Primary Set-Aside','All Set-Asides',
+    'Primary Agency','All Agencies',
+    'Primary State','All States',
+    'Est Subcontract Value ($)',
+    'Sample Contract Titles'
+  ];
+  const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
+  const csvRows=[headers.map(h=>q(h)).join(',')];
   rows.forEach((a,i)=>{
     const estSub=Math.round(a.tv*0.15);
-    const latestYr=a.yrs.length?Math.max(...a.yrs):'';
+    const tier=a.score>=75?'Strong':a.score>=50?'Good':a.score>=30?'Moderate':'Low';
+    // Collect all unique NAICS codes from contracts
+    const allNaics=[...new Set((a.contracts||[]).map(r=>r.naics).filter(Boolean))].join('; ');
+    const yrsStr=(a.yrs||[]).join(', ');
     csvRows.push([
-      i+1,clean(a.name),clean(a.topNAICS),clean(NAICS[a.topNAICS]||''),clean(a.naicsMatch),
-      a.cnt,Math.round(a.tv),a.avgValue,a.consistency,clean(a.latestAwardMonthYear||''),clean(a.latestAwardDate||''),
-      clean(a.topAgency),clean(a.agencies.join('; ')),clean(a.states.join('; ')),
-      clean(a.setAsides.join('; ')),
-      a.farEligible?'Yes':'No',a.certOK?'Yes':'Check',
-      a.score,estSub,
-      clean(a.contracts.slice(0,5).map(r=>(r.title||'')+' ['+fmtV(r.amount||0)+' '+((r.awardDate&&parseDate(r.awardDate)?.toLocaleDateString('en-US',{month:'short',year:'numeric'}))||'') +']').filter(Boolean).join(' | '))
+      q(i+1),q(a.name),
+      q(a.score),q(tier),
+      q(a.topNAICS),q(NAICS[a.topNAICS]||''),q(allNaics),q(a.naicsMatch),
+      q(a.cnt),q(Math.round(a.tv)),q(a.avgValue),
+      q(a.consistency),q(yrsStr),
+      q(a.latestAwardDate||''),q(a.latestAwardMonthYear||''),
+      q(a.farEligible?'Yes':'No'),q(a.certOK?'Yes':'Check'),
+      q(a.setAsides?.[0]||''),q((a.setAsides||[]).join('; ')),
+      q(a.topAgency),q((a.agencies||[]).join('; ')),
+      q(a.states?.[0]||''),q((a.states||[]).join('; ')),
+      q(estSub),
+      q((a.contracts||[]).slice(0,5).map(r=>{
+        const dt=r.awardDate&&parseDate(r.awardDate);
+        const dStr=dt?dt.toLocaleDateString('en-US',{month:'short',year:'numeric'}):'';
+        return(r.title||'Untitled')+' ['+fmtV(r.amount||0)+(dStr?' '+dStr:'')+'] NAICS:'+r.naics;
+      }).join(' | '))
     ].join(','));
   });
-  const csv=csvRows.join('\n');
+  const BOM='\uFEFF';
+  const csv=BOM+csvRows.join('\n');
   const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
   const url=URL.createObjectURL(blob);
   const link=document.createElement('a');
@@ -1960,10 +1982,10 @@ function rebuildPIList(){
   if(!src.length){if(tbody)tbody.innerHTML='<tr><td colspan="10" style="padding:24px;text-align:center;color:var(--t3)">Upload SAM.gov CSV to populate</td></tr>';return;}
   const srch=(document.getElementById('sSrch')?.value||'').toLowerCase();
   const fyr=document.getElementById('sFyr')?.value||'';
-  const fn=document.getElementById('sFn')?.value||'';
-  const fs=document.getElementById('sFs')?.value||'';
-  const fag=document.getElementById('sFag')?.value||'';
-  const fsa=document.getElementById('sFsa')?.value||'';
+  const fn=getMD('sFn');
+  const fs=getMD('sFs');
+  const fag=getMD('sFag');
+  const fsa=getMD('sFsa');
   const fval=getValFilter();
   const fcnt=parseInt(document.getElementById('sFcnt')?.value||'0')||0;
   const fnaics=document.getElementById('sFnaicsMatch')?.value||'';
@@ -2004,7 +2026,7 @@ function rebuildPIList(){
       far,certOK,sc:Math.min(100,sc),ag:a.ag[0]||'',st:a.st[0]||'',sa:a.sa[0]||'',
       ags:a.ag,yrs:[...a.yrs],cx:a.cx};
   });
-  if(fval.length){list=list.filter(a=>fval.some(v=>vb[v]&&a.tv/a.cnt>=vb[v][0]&&a.tv/a.cnt<vb[v][1]));}
+  if(fval.length){list=list.filter(a=>fval.some(v=>vb[v]&&a.tv>=vb[v][0]&&a.tv<vb[v][1]));}
   if(fcnt>0)list=list.filter(a=>a.cnt>=fcnt);
   if(fnaics)list=list.filter(a=>a.mt===fnaics);
   if(ffar)list=list.filter(a=>a.far);
@@ -2084,30 +2106,31 @@ function exportCompanyContracts(data){
   const contracts=(data.contracts||[]).slice().sort((a,b)=>{
     const da=parseDate(a.awardDate)?.getTime()||0;
     const db=parseDate(b.awardDate)?.getTime()||0;
-    return db-da; // newest first
+    return db-da;
   });
   if(!contracts.length){showDone('No contract data available for this company',2000);return;}
-  const clean=v=>'"'+String(v||'').replace(/"/g,'""')+'"';
+  const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
   const headers=['Contract Title','NAICS Code','NAICS Description','Amount ($)',
     'Award Date','Award Month','Award Year','Agency','Set-Aside','NAICS Match'];
-  const rows=[headers.join(',')];
+  const csvRows=[headers.map(h=>q(h)).join(',')];
   contracts.forEach(r=>{
     const pd=parseDate(r.awardDate);
     const match=_piMatchNAICS(r.naics);
-    rows.push([
-      clean(r.title||''),
-      clean(r.naics||''),
-      clean(NAICS[r.naics]||''),
-      Math.round(r.amount||0),
-      pd?pd.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'',
-      pd?pd.toLocaleDateString('en-US',{month:'long',year:'numeric'}):'',
-      pd?pd.getFullYear():'',
-      clean(r.agency||''),
-      clean(r.setAside||'Unrestricted'),
-      clean(match.label||'No match')
+    csvRows.push([
+      q(r.title||''),
+      q(r.naics||''),
+      q(NAICS[r.naics]||''),
+      q(Math.round(r.amount||0)),
+      q(pd?pd.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):''),
+      q(pd?pd.toLocaleDateString('en-US',{month:'long',year:'numeric'}):''),
+      q(pd?pd.getFullYear():''),
+      q(r.agency||''),
+      q(r.setAside||'Unrestricted'),
+      q(match.label||'No match')
     ].join(','));
   });
-  const csv=rows.join('\n');
+  const BOM='\uFEFF';
+  const csv=BOM+csvRows.join('\n');
   const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
   const url=URL.createObjectURL(blob);
   const link=document.createElement('a');
