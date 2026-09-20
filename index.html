@@ -1715,13 +1715,11 @@ async function createGoogleSheet(){
     if(result.ok){
       const sheetLink = result.url ? `<a href="${result.url}" target="_blank" style="color:#1A6FB5;font-weight:600;text-decoration:underline">Open Google Sheet ↗</a>` : '';
       _gsShowProgress('✓ Data pushed — '+dataRows.length+' companies written', 15, 'Enrichment starting automatically... ' + sheetLink);
-      // Start polling for enrichment progress
+      if(result.url) localStorage.setItem('gs_sheet_url', result.url);
       _gsStartPolling();
-      // Try to open sheet (may be blocked by popup blocker)
       if(result.url) {
-        localStorage.setItem('gs_sheet_url', result.url);
         const w = window.open(result.url,'_blank');
-        if(!w) showDone('✓ Pushed! Popup blocked — click "Open Google Sheet" in the progress bar', 4000);
+        if(!w) showDone('✓ Pushed! Popup blocked — click "Open Google Sheet" in progress bar', 4000);
       }
     } else {
       _gsShowProgress('✗ Push failed', 0, result.error||'Unknown error');
@@ -1772,10 +1770,7 @@ async function pushOppsToGoogleSheet(oppRows){
     const result=await resp.json().catch(()=>({ok:false,error:'Invalid response'}));
     if(result.ok){
       showDone('✓ '+rows.length+' opportunities pushed to "'+GS_TAB_OPPS+'" tab',4000);
-      if(result.url) {
-        const w = window.open(result.url,'_blank');
-        if(!w) showDone('✓ Pushed! Click to open: ' + result.url, 6000);
-      }
+      if(result.url) window.open(result.url,'_blank');
     } else {
       throw new Error(result.error||'Push failed');
     }
@@ -1806,8 +1801,8 @@ function showGSScriptSetup(){
 // ── Google Sheet Progress Tracker ─────────────────────────────
 let _gsPollTimer = null;
 let _gsPollCount = 0;
-const _GS_POLL_INTERVAL = 6000;   // poll every 6 seconds
-const _GS_POLL_MAX      = 60;     // stop after 6 minutes (60 × 6s)
+const _GS_POLL_INTERVAL = 6000;
+const _GS_POLL_MAX      = 60;
 
 function _gsShowProgress(label, pct, detail) {
   const panel = document.getElementById('gsProgress');
@@ -1856,11 +1851,7 @@ async function _gsPollStatus() {
     }
     else if (data.stage === 'enriching') {
       const pct = 15 + ((data.current || 0) / Math.max(data.total || 1, 1)) * 75;
-      _gsShowProgress(
-        '🔍 Enriching contacts... ' + data.current + '/' + data.total,
-        pct,
-        data.company || ''
-      );
+      _gsShowProgress('🔍 Enriching contacts... ' + data.current + '/' + data.total, pct, data.company || '');
     }
     else if (data.stage === 'dedup') {
       _gsShowProgress('🧹 Removing duplicates...', 92, 'Merging best contact data');
@@ -1880,9 +1871,6 @@ async function _gsPollStatus() {
       _gsShowProgress('✗ Error', 0, data.message || 'Enrichment failed');
       _gsStopPolling();
       setTimeout(() => { const p = document.getElementById('gsProgress'); if (p) p.style.display = 'none'; }, 8000);
-    }
-    else if (data.stage === 'idle') {
-      // Enrichment hasn't started yet — keep polling
     }
   } catch (err) {
     // Silent fail — keep polling
