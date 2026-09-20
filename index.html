@@ -327,6 +327,18 @@
       </div>
     </div>
 
+    <!-- Google Sheet progress panel -->
+    <div id="gsProgress" style="display:none;margin-bottom:10px;padding:10px 14px;background:linear-gradient(135deg,rgba(13,59,110,0.05),rgba(46,125,82,0.04));border:1px solid rgba(13,59,110,0.12);border-radius:8px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <span id="gsProgressLabel" style="font-size:11px;font-weight:600;color:var(--navy)">📤 Pushing data...</span>
+        <span id="gsProgressPct" style="font-size:10px;font-weight:600;color:var(--t2)"></span>
+      </div>
+      <div style="height:5px;background:rgba(13,59,110,0.08);border-radius:3px;overflow:hidden">
+        <div id="gsProgressBar" style="height:100%;width:0%;background:linear-gradient(90deg,#2E7D52,#1A6FB5);border-radius:3px;transition:width .4s ease"></div>
+      </div>
+      <div id="gsProgressDetail" style="font-size:10px;color:var(--t3);margin-top:5px"></div>
+    </div>
+
     <!-- FAR 19.702 banner -->
     <div style="margin-bottom:10px;padding:8px 12px;background:linear-gradient(135deg,rgba(46,125,82,0.07),rgba(13,59,110,0.05));border-radius:6px;border-left:3px solid #2E7D52;font-size:11px;color:var(--t2);line-height:1.5">
       <strong style="color:#2E7D52">⚖ FAR 19.702 leverage:</strong> Primes winning >&nbsp;<strong>$900K</strong> (updated Oct&nbsp;2025) must legally sub to MBE + Small Business firms. You don't ask for a favour — they need you for compliance. Look for the <span style="color:#2E7D52;font-weight:600">✓ FAR</span> badge below.
@@ -1690,6 +1702,9 @@ async function createGoogleSheet(){
     '','','','','','Not contacted',now
   ]});
 
+  // Show progress panel
+  _gsShowProgress('📤 Pushing '+dataRows.length+' companies to Google Sheet...', 5, '');
+
   try{
     const resp=await fetch(url,{
       method:'POST',
@@ -1698,15 +1713,25 @@ async function createGoogleSheet(){
     });
     const result=await resp.json().catch(()=>({ok:false,error:'Invalid response'}));
     if(result.ok){
-      showDone('✓ '+dataRows.length+' companies pushed to "'+GS_TAB_SUBS+'" tab',4000);
-      if(result.url) window.open(result.url,'_blank');
+      const sheetLink = result.url ? `<a href="${result.url}" target="_blank" style="color:#1A6FB5;font-weight:600;text-decoration:underline">Open Google Sheet ↗</a>` : '';
+      _gsShowProgress('✓ Data pushed — '+dataRows.length+' companies written', 15, 'Enrichment starting automatically... ' + sheetLink);
+      // Start polling for enrichment progress
+      _gsStartPolling();
+      // Try to open sheet (may be blocked by popup blocker)
+      if(result.url) {
+        localStorage.setItem('gs_sheet_url', result.url);
+        const w = window.open(result.url,'_blank');
+        if(!w) showDone('✓ Pushed! Popup blocked — click "Open Google Sheet" in the progress bar', 4000);
+      }
     } else {
+      _gsShowProgress('✗ Push failed', 0, result.error||'Unknown error');
       throw new Error(result.error||'Push failed');
     }
   }catch(err){
     const msg=err.message.includes('Failed to fetch')
       ?'Cannot reach Apps Script — check URL in My Profile and ensure "Who has access: Anyone"'
       :'Error: '+err.message.slice(0,80);
+    _gsShowProgress('✗ '+msg, 0, '');
     showDone('✗ '+msg,5000);
   }finally{
     if(btn)btn.disabled=false;
@@ -1747,7 +1772,10 @@ async function pushOppsToGoogleSheet(oppRows){
     const result=await resp.json().catch(()=>({ok:false,error:'Invalid response'}));
     if(result.ok){
       showDone('✓ '+rows.length+' opportunities pushed to "'+GS_TAB_OPPS+'" tab',4000);
-      if(result.url) window.open(result.url,'_blank');
+      if(result.url) {
+        const w = window.open(result.url,'_blank');
+        if(!w) showDone('✓ Pushed! Click to open: ' + result.url, 6000);
+      }
     } else {
       throw new Error(result.error||'Push failed');
     }
@@ -1763,15 +1791,102 @@ function showGSScriptSetup(){
     'SETUP (3 minutes):\n\n'+
     '1. Open your Google Sheet\n'+
     '2. Extensions → Apps Script\n'+
-    '3. Paste the UGS_Sheet_Script_v1.gs code\n'+
+    '3. Create 3 files: 01_Data_Receiver, 02_Enrichment, 03_CRM\n'+
     '4. Save → Deploy → New deployment\n'+
     '   Type: Web app | Execute as: Me | Access: Anyone\n'+
     '5. Copy the Web App URL\n'+
     '6. Paste into My Profile → Google Sheet Script URL\n\n'+
-    'Then click the button again — data goes straight to your sheet.\n\n'+
+    'Then click the button again — data goes straight to your sheet.\n'+
+    'Live progress will show enrichment status after push.\n\n'+
     'IMPORTANT: Set the same token in:\n'+
     'My Profile → Sheet Secret Token'
   );
+}
+
+// ── Google Sheet Progress Tracker ─────────────────────────────
+let _gsPollTimer = null;
+let _gsPollCount = 0;
+const _GS_POLL_INTERVAL = 6000;   // poll every 6 seconds
+const _GS_POLL_MAX      = 60;     // stop after 6 minutes (60 × 6s)
+
+function _gsShowProgress(label, pct, detail) {
+  const panel = document.getElementById('gsProgress');
+  const el    = document.getElementById('gsProgressLabel');
+  const bar   = document.getElementById('gsProgressBar');
+  const pctEl = document.getElementById('gsProgressPct');
+  const detEl = document.getElementById('gsProgressDetail');
+  if (panel) panel.style.display = 'block';
+  if (el)    el.textContent = label;
+  if (bar)   bar.style.width = Math.min(pct, 100) + '%';
+  if (pctEl) pctEl.textContent = pct > 0 ? Math.round(pct) + '%' : '';
+  if (detEl) detEl.innerHTML = detail;
+}
+
+function _gsStartPolling() {
+  _gsPollCount = 0;
+  if (_gsPollTimer) clearInterval(_gsPollTimer);
+  _gsPollTimer = setInterval(_gsPollStatus, _GS_POLL_INTERVAL);
+}
+
+function _gsStopPolling() {
+  if (_gsPollTimer) { clearInterval(_gsPollTimer); _gsPollTimer = null; }
+}
+
+async function _gsPollStatus() {
+  _gsPollCount++;
+  if (_gsPollCount > _GS_POLL_MAX) {
+    _gsStopPolling();
+    _gsShowProgress('⏱ Enrichment still running in background', 50, 'Check your Google Sheet for results');
+    setTimeout(() => { const p = document.getElementById('gsProgress'); if (p) p.style.display = 'none'; }, 8000);
+    return;
+  }
+  try {
+    const url = getScriptUrl();
+    if (!url) return;
+    const resp = await fetch(url, {
+      method: 'POST',
+      headers: {'Content-Type': 'text/plain'},
+      body: JSON.stringify({ action: 'status', token: getSheetToken() })
+    });
+    const data = await resp.json().catch(() => ({}));
+    if (!data.stage) return;
+
+    if (data.stage === 'received') {
+      _gsShowProgress('✓ Data written to sheet', 15, data.rows + ' companies · Enrichment starting...');
+    }
+    else if (data.stage === 'enriching') {
+      const pct = 15 + ((data.current || 0) / Math.max(data.total || 1, 1)) * 75;
+      _gsShowProgress(
+        '🔍 Enriching contacts... ' + data.current + '/' + data.total,
+        pct,
+        data.company || ''
+      );
+    }
+    else if (data.stage === 'dedup') {
+      _gsShowProgress('🧹 Removing duplicates...', 92, 'Merging best contact data');
+    }
+    else if (data.stage === 'formatting') {
+      _gsShowProgress('🎨 Formatting sheet...', 96, 'Center-aligning, setting widths');
+    }
+    else if (data.stage === 'complete') {
+      const sheetUrl = localStorage.getItem('gs_sheet_url') || '';
+      const sheetLink = sheetUrl ? ' · <a href="'+sheetUrl+'" target="_blank" style="color:#1A6FB5;font-weight:600;text-decoration:underline">Open Google Sheet ↗</a>' : '';
+      _gsShowProgress('✓ Complete', 100, (data.message || 'Enrichment finished') + sheetLink);
+      _gsStopPolling();
+      showDone('✓ ' + (data.message || 'Enrichment complete'), 4000);
+      setTimeout(() => { const p = document.getElementById('gsProgress'); if (p) p.style.display = 'none'; }, 10000);
+    }
+    else if (data.stage === 'error') {
+      _gsShowProgress('✗ Error', 0, data.message || 'Enrichment failed');
+      _gsStopPolling();
+      setTimeout(() => { const p = document.getElementById('gsProgress'); if (p) p.style.display = 'none'; }, 8000);
+    }
+    else if (data.stage === 'idle') {
+      // Enrichment hasn't started yet — keep polling
+    }
+  } catch (err) {
+    // Silent fail — keep polling
+  }
 }
 
 function exportAwardees(){
@@ -2200,7 +2315,7 @@ function renderPIDetail(a){
     ?`${matchedCx.length} of ${contracts.length} contracts align. Focus on ${fmtV(matchedVal)} in aligned work. Pitch your NAICS expertise + MBE compliance value.`
     :`No direct NAICS match — approach as a teaming partner for future bids requiring your NAICS codes alongside theirs.`;
 
-  document.getElementById('piDetail').innerHTML=`
+  const _piDet=document.getElementById('piDetail');if(!_piDet)return;_piDet.innerHTML=`
     <!-- Header -->
     <div style="display:grid;grid-template-columns:1fr auto;gap:16px;margin-bottom:16px;align-items:start">
       <div>
