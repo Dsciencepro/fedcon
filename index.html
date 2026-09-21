@@ -1803,37 +1803,15 @@ function showGSScriptSetup(){
 
 // ── Google Sheet Progress Tracker ─────────────────────────────
 
-// Trigger enrichment via Apps Script
-async function triggerEnrichment() {
-  const url = getScriptUrl();
-  if (!url) { showGSScriptSetup(); return; }
-
-  const btn = document.getElementById('gsEnrichBtn');
-  const lbl = document.getElementById('gsEnrichLabel');
-  if (btn) btn.disabled = true;
-  if (lbl) lbl.textContent = 'Starting...';
-
-  _gsShowProgress('🔍 Starting contact enrichment...', 5, 'Queuing enrichment on server...');
-
-  try {
-    const resp = await fetch(url, {
-      method: 'POST',
-      headers: {'Content-Type': 'text/plain'},
-      body: JSON.stringify({ action: 'enrich', token: getSheetToken() })
-    });
-    const result = await resp.json().catch(() => ({ ok: false, error: 'Invalid response' }));
-    if (result.ok) {
-      _gsShowProgress('🔍 Enrichment queued', 10, result.message || 'Processing in background...');
-      _gsStartPolling();
-    } else {
-      _gsShowProgress('✗ ' + (result.error || 'Failed to start enrichment'), 0, '');
-    }
-  } catch (err) {
-    _gsShowProgress('✗ Cannot reach Apps Script', 0, err.message.slice(0, 80));
-  } finally {
-    if (btn) btn.disabled = false;
-    if (lbl) lbl.textContent = 'Enrich Contacts';
+// Trigger enrichment via Google Sheet CRM menu (safe — no POST)
+function triggerEnrichment() {
+  const sheetUrl = localStorage.getItem('gs_sheet_url');
+  if (!sheetUrl) {
+    showDone('Push data to Google Sheet first, then enrich', 3000);
+    return;
   }
+  window.open(sheetUrl, '_blank');
+  showDone('Sheet opened — click 🚀 UGS CRM menu → Re-enrich all contacts', 6000);
 }
 
 let _gsPollTimer = null;
