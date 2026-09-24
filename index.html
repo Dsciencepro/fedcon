@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Opportunity Pipeline v52</title>
+<title>Opportunity Pipeline v54</title>
 <link rel="icon" href="https://ugsconsulting.com/wp-content/uploads/2026/05/cropped-UGSLogo-32x32.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
@@ -1573,7 +1573,7 @@ function _getFilteredAwardees(){
     if(r.workState&&!a.st.includes(r.workState))a.st.push(r.workState);
     if(r.setAside&&!a.sa.includes(r.setAside))a.sa.push(r.setAside);
     if(r.awardDate){const pd=parseDate(r.awardDate);if(pd)a.yrs.add(pd.getFullYear());}
-    a.cx.push({naics:r.naics,amount:r.amount,agency:r.agency,awardDate:r.awardDate,setAside:r.setAside,title:r.title});
+    a.cx.push({naics:r.naics,amount:r.amount,agency:r.agency,awardDate:r.awardDate,setAside:r.setAside,title:r.title,awardNum:r.awardNum||''});
   });
   let list=Object.values(awMap).map(a=>{
     const consistency=Math.max(1,a.yrs.size);
@@ -1673,7 +1673,8 @@ async function createGoogleSheet(){
     'Primary Set-Aside','All Set-Asides','Primary Agency','All Agencies','Primary State','All States',
     'Est Subcontract Value ($)',
     'BD Contact Name','BD Email','BD Phone','BD LinkedIn',
-    'Company Website','Outreach Status','Last Updated'
+    'Company Website','Outreach Status','Last Updated',
+    'Award Numbers'
   ];
 
   const now=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
@@ -1702,7 +1703,8 @@ async function createGoogleSheet(){
     a.topState||'',
     (a.states||[]).join('; '),
     Math.round((a.tv||0)*0.15),
-    '','','','','','Not contacted',now
+    '','','','','','Not contacted',now,
+    [...new Set((a.contracts||[]).map(r=>String(r.awardNum||'').trim()).filter(Boolean))].join('; ')
   ]});
 
   // Show progress panel
