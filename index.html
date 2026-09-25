@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Opportunity Pipeline v55</title>
+<title>Opportunity Pipeline v56</title>
 <link rel="icon" href="https://ugsconsulting.com/wp-content/uploads/2026/05/cropped-UGSLogo-32x32.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
@@ -499,8 +499,11 @@
     </div>
   </div>
   <div class="card" style="margin-bottom:16px">
-    <div class="card-title">🎯 Subcontracting intelligence — consistency matrix</div>
-    <p style="font-size:11px;color:var(--t2);margin-bottom:10px">X = total contract value · Y = years active (consistency) · Bubble size = contracts won · <strong>Color = how consistently they win</strong>. Hover for details. Click to see call list.</p>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
+      <div class="card-title" style="margin-bottom:0">🎯 Filter by win consistency</div>
+      <button onclick="go('insights')" style="font-size:10px;padding:3px 10px;border-radius:5px;border:1px solid #1A6FB5;background:rgba(26,111,181,0.07);color:#1A6FB5;cursor:pointer;font-weight:600">📈 View consistency matrix on Insights →</button>
+    </div>
+    <p style="font-size:11px;color:var(--t2);margin:6px 0 10px">Click a group to filter the awardee table above. Click any company in the table for its call-prep brief.</p>
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px">
       <div id="piCat_1" onclick="togglePiCat(1)" style="background:var(--card);border:1.5px solid var(--bdr);border-radius:8px;padding:8px 10px;border-top:3px solid #c3c2b7;cursor:pointer;transition:all .15s">
         <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#888780;margin-bottom:2px">Gray — 1 year</div>
@@ -533,16 +536,6 @@
     </div>
     <!-- Value filter + export for matrix -->
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
-      <span style="font-size:10px;font-weight:600;color:var(--t3)">Zoom by value:</span>
-      <div style="display:flex;gap:5px;flex-wrap:wrap" id="scBandPills">
-        <button onclick="setScBand('all')" id="scb_all" class="sc-pill active">All</button>
-        <button onclick="setScBand('xs')"  id="scb_xs"  class="sc-pill">Under $1M</button>
-        <button onclick="setScBand('sm')"  id="scb_sm"  class="sc-pill">$1M–$3M</button>
-        <button onclick="setScBand('md')"  id="scb_md"  class="sc-pill">$3M–$5M</button>
-        <button onclick="setScBand('lg')"  id="scb_lg"  class="sc-pill">$5M–$10M</button>
-        <button onclick="setScBand('xl')"  id="scb_xl"  class="sc-pill">$10M–$50M</button>
-        <button onclick="setScBand('xxl')" id="scb_xxl" class="sc-pill">$50M+</button>
-      </div>
       <button onclick="exportAwardees()" style="margin-left:auto;display:flex;align-items:center;gap:5px;padding:5px 12px;border-radius:6px;border:1px solid #2E7D52;background:rgba(46,125,82,0.08);color:#2E7D52;font-size:11px;font-weight:600;cursor:pointer">⬇ Export call list CSV</button>
     </div>
     <!-- Filtered count + active filter indicator -->
@@ -551,7 +544,6 @@
       <span id="scActiveFilter" style="display:none;font-size:10px;padding:2px 10px;border-radius:10px;background:rgba(26,111,181,0.1);color:#1A6FB5;font-weight:600"></span>
       <button id="scClearFilter" onclick="clearPiCatFilter()" style="display:none;font-size:10px;color:var(--r);background:none;border:none;cursor:pointer;font-weight:600">✕ Clear filter</button>
     </div>
-    <div style="position:relative;height:420px"><canvas id="cScatter" role="img" aria-label="Subcontracting consistency matrix: X=total value, Y=years active, bubble=contracts won, color=consistency"></canvas></div>
   </div>
 </div>
 
@@ -663,6 +655,25 @@
         <tbody id="iAgTbody"><tr><td colspan="7" style="padding:28px;text-align:center;color:var(--t3)">Upload CSV to populate</td></tr></tbody>
       </table>
     </div>
+  </div>
+
+  <!-- Row 5: Subcontracting consistency matrix (moved from Sub-Contracting tab in v56) -->
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-title">🎯 Subcontracting consistency matrix</div>
+    <p style="font-size:11px;color:var(--t2);margin-bottom:10px">X = total contract value · Y = years active · Bubble size = contracts won · Colour = how consistently they win. Uses the <strong>Sub-Contracting tab's filters</strong>. Click a bubble to open that company's call-prep brief.</p>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+      <span style="font-size:10px;font-weight:600;color:var(--t3)">Zoom by value:</span>
+      <div style="display:flex;gap:5px;flex-wrap:wrap" id="scBandPills">
+        <button onclick="setScBand('all')" id="scb_all" class="sc-pill active">All</button>
+        <button onclick="setScBand('xs')"  id="scb_xs"  class="sc-pill">Under $1M</button>
+        <button onclick="setScBand('sm')"  id="scb_sm"  class="sc-pill">$1M–$3M</button>
+        <button onclick="setScBand('md')"  id="scb_md"  class="sc-pill">$3M–$5M</button>
+        <button onclick="setScBand('lg')"  id="scb_lg"  class="sc-pill">$5M–$10M</button>
+        <button onclick="setScBand('xl')"  id="scb_xl"  class="sc-pill">$10M–$50M</button>
+        <button onclick="setScBand('xxl')" id="scb_xxl" class="sc-pill">$50M+</button>
+      </div>
+    </div>
+    <div style="position:relative;height:420px"><canvas id="cScatter" role="img" aria-label="Subcontracting consistency matrix: X=total value, Y=years active, bubble=contracts won, color=consistency"></canvas></div>
   </div>
 
 </div>
@@ -1336,7 +1347,7 @@ function enterDash(){
   document.getElementById('cnt').textContent=(opps.length+awards.length)+' '+FIRM_NAME+' records';
   updateBadge();updateFresh();buildCharts();rOpps();applyFirmBranding();
 }
-function go(p){const pages=['opps','subs','insights','proscore','about'];document.querySelectorAll('.hdr-nav button').forEach((b,i)=>b.classList.toggle('active',pages[i]===p));['pOpps','pSubs','pInsights','pProscore','pAbout','pShortlist'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.toggle('hidden',id!=='p'+p.charAt(0).toUpperCase()+p.slice(1)&&id!=='pShortlist'||(id==='pShortlist'&&p!=='shortlist'))});if(p==='subs')rSubs();if(p==='insights')rInsights();if(p==='proscore')renderProscore();if(p==='shortlist')renderShortlist();}
+function go(p){const pages=['opps','subs','insights','proscore','about'];document.querySelectorAll('.hdr-nav button').forEach((b,i)=>b.classList.toggle('active',pages[i]===p));['pOpps','pSubs','pInsights','pProscore','pAbout','pShortlist'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.toggle('hidden',id!=='p'+p.charAt(0).toUpperCase()+p.slice(1)&&id!=='pShortlist'||(id==='pShortlist'&&p!=='shortlist'))});if(p==='subs')rSubs();if(p==='insights'){rInsights();setTimeout(()=>{try{if(!window._scatterAll||!window._scatterAll.length)rSubs();renderScatter();}catch(e){console.error('matrix render',e)}},60);}if(p==='proscore')renderProscore();if(p==='shortlist')renderShortlist();}
 function setUGS(v){showLoading(v?"Filtering to "+FIRM_NAME+" NAICS codes...":"Loading all NAICS data...","Rescoring opportunities");setTimeout(()=>{try{ugsOnly=v;document.getElementById('togUGS').classList.toggle('active',v);document.getElementById('togAll').classList.toggle('active',!v);document.getElementById("oFn").innerHTML="<option value=\"\">All NAICS</option>";oPage=1;buildCharts();rOpps();showDone(v?"Filtered to "+FIRM_NAME+" NAICS · "+opps.length+" opportunities":"Showing all NAICS · "+allOpps.length+" opportunities");}catch(e){console.error('setUGS error',e)}finally{hideLoading()}},30)}
 function setUGSs(v){showLoading(v?'Filtering subcontracting to '+FIRM_NAME+' NAICS...':'Loading all NAICS awardees...','Building awardee intelligence');setTimeout(()=>{try{ugsOnlyS=v;document.getElementById('togUGSs').classList.toggle('active',v);document.getElementById('togAlls').classList.toggle('active',!v);const nOpts=document.getElementById('sFnOptions');if(nOpts)nOpts.innerHTML='';const nLbl=document.getElementById('sFnLabel');if(nLbl)nLbl.textContent=nLbl.dataset.allLabel||'All NAICS';sPage=1;rSubs();showDone(v?FIRM_NAME+' NAICS filter applied · '+awards.length+' awards':'All NAICS loaded · '+allAwards.length+' awards');}catch(e){console.error('setUGSs error',e)}finally{hideLoading()}},30)}
 function updateBadge(){
@@ -1573,7 +1584,8 @@ function _getFilteredAwardees(){
     if(r.workState&&!a.st.includes(r.workState))a.st.push(r.workState);
     if(r.setAside&&!a.sa.includes(r.setAside))a.sa.push(r.setAside);
     if(r.awardDate){const pd=parseDate(r.awardDate);if(pd)a.yrs.add(pd.getFullYear());}
-    a.cx.push({naics:r.naics,amount:r.amount,agency:r.agency,awardDate:r.awardDate,setAside:r.setAside,title:r.title,awardNum:r.awardNum||''});
+    a.cx.push({naics:r.naics,amount:r.amount,agency:r.agency,awardDate:r.awardDate,setAside:r.setAside,title:r.title,awardNum:r.awardNum||'',
+      link:r.link||'',subTier:r.subTier||'',office:r.office||'',pocName:r.pocName||'',pocEmail:r.pocEmail||'',pocPhone:r.pocPhone||'',desc:String(r.desc||'').slice(0,400)});
   });
   let list=Object.values(awMap).map(a=>{
     const consistency=Math.max(1,a.yrs.size);
@@ -2223,7 +2235,7 @@ function rebuildPIList(){
       tr.dataset.row=JSON.stringify(d);
       tr.onmouseover=function(){this.style.background='var(--bdr2)'};
       tr.onmouseout=function(){this.style.background=''};
-      tr.onclick=function(){renderPIDetail(JSON.parse(this.dataset.row))};
+      tr.onclick=function(){var d0=JSON.parse(this.dataset.row);openAwardeeByName(d0.name,d0);};
       tr.innerHTML='<td style="padding:7px 10px"><div style="width:30px;height:30px;border-radius:50%;background:'+scol+'18;border:2px solid '+scol+';display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:'+scol+'">'+sc+'</div></td>'
         +'<td style="padding:7px 10px;max-width:220px"><div style="font-weight:600;color:var(--navy);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(a.name)+'</div><div style="font-size:10px;color:var(--t3)">'+naicsDesc+'</div></td>'
         +'<td style="padding:7px 10px;text-align:right;font-weight:600;color:var(--navy);white-space:nowrap">'+fmtV(a.tv)+'</td>'
@@ -2285,6 +2297,215 @@ function exportCompanyContracts(data){
   showDone('✓ Exported '+contracts.length+' contracts for '+company.slice(0,30),3000);
 }
 
+// ── v56: helpers the detail panel needs (were missing → clicks did nothing) ──
+let _piChart=null;
+const _piCColor=n=>n>=4?'#1A6FB5':n===3?'#3a80c0':n===2?'#5BA4D9':'#9CA3AF';
+const _piCLabel=n=>n>=4?'Consistent winner (4+ yrs)':n===3?'Established (3 yrs)':n===2?'Emerging (2 yrs)':'One-off (1 yr)';
+
+/** Opens a company's detail panel with its FULL contract list (table rows only carry 15). */
+function openAwardeeByName(name,fallback){
+  let full=null;
+  try{full=_getFilteredAwardees().find(x=>x.name===name)||null;}catch(e){console.error('openAwardee',e);}
+  const rec=full||fallback;
+  if(!rec){showDone('This company is outside the current Sub-Contracting filters — clear filters to open it',4000);return;}
+  const onSubs=!document.getElementById('pSubs')?.classList.contains('hidden');
+  if(onSubs){renderPIDetail(rec);}else{go('subs');setTimeout(()=>renderPIDetail(rec),150);}
+}
+
+/** "RENAISSANCE GLOBAL SERVICES LLC HOLMDEL 07733 JIB" → "RENAISSANCE GLOBAL SERVICES LLC" (for web searches). */
+function _piCleanName(s){
+  s=String(s||'').trim();
+  const m=s.match(/^(.*?\b(?:L\.?L\.?C\.?|P\.?L\.?L\.?C\.?|INC\.?|INCORPORATED|CORP\.?|CORPORATION|P\.?C\.?|LTD\.?|L\.?L\.?P\.?|L\.?P\.?|COMPANY|CO\.)(?=\s|,|$))/i);
+  if(m)return m[1].replace(/[,\s]+$/,'');
+  const t=s.replace(/\s+(USA|US)$/i,'').replace(/\s+\d{5}(-\d{4})?\b.*$/,'').replace(/\s+[A-Z]{2}$/,'');
+  return t.replace(/\s+\S+$/,'')||s;
+}
+
+/** What their set-aside wins say about their own status (you must hold a status to win its set-aside). */
+function _piStatusFromSetAsides(contracts){
+  const rules=[['Small business',/small business|\bsba\b/i],['8(a) participant',/8\s*\(\s*a\s*\)/i],
+    ['Service-disabled veteran-owned',/sdvosb|service[- ]disabled/i],['HUBZone',/hubzone/i],['Women-owned',/wosb|women[- ]owned/i]];
+  const tally={};let open=0;
+  contracts.forEach(r=>{const s=r.setAside||'';let hit=false;
+    rules.forEach(([l,re])=>{if(re.test(s)){tally[l]=(tally[l]||0)+1;hit=true;}});if(!hit)open++;});
+  return{tally,open,n:contracts.length};
+}
+
+function _piCallPrepHTML(a,contracts){
+  const clean=_piCleanName(a.name);const q=encodeURIComponent(clean);
+  const box='background:var(--bdr2);border-radius:8px;padding:10px 12px';
+  const hd='font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);margin-bottom:6px';
+  const li='font-size:11px;color:var(--t2);line-height:1.55;margin-bottom:3px';
+  // who buys from them
+  const byAg={};contracts.forEach(r=>{const k=r.agency||'Unknown';byAg[k]=byAg[k]||{n:0,v:0};byAg[k].n++;byAg[k].v+=(r.amount||0);});
+  const agList=Object.entries(byAg).sort((x,y)=>y[1].v-x[1].v).slice(0,4);
+  const offs={};contracts.forEach(r=>{const o=[r.subTier,r.office].filter(Boolean).join(' · ');if(o)offs[o]=(offs[o]||0)+1;});
+  const offList=Object.entries(offs).sort((x,y)=>y[1]-x[1]).slice(0,3);
+  // what they deliver
+  const byN={};contracts.forEach(r=>{if(r.naics)byN[r.naics]=(byN[r.naics]||0)+1;});
+  const nList=Object.entries(byN).sort((x,y)=>y[1]-x[1]).slice(0,4);
+  // timeline
+  const dated=contracts.filter(r=>parseDate(r.awardDate)).sort((x,y)=>parseDate(y.awardDate)-parseDate(x.awardDate));
+  const recent=dated.slice(0,3);
+  const biggest=contracts.slice().sort((x,y)=>(y.amount||0)-(x.amount||0))[0];
+  const byYr={};dated.forEach(r=>{const y=parseDate(r.awardDate).getFullYear();byYr[y]=(byYr[y]||0)+1;});
+  const yrLine=Object.keys(byYr).sort().reverse().map(y=>`${y}: ${byYr[y]}`).join(' · ');
+  const fd=r=>{const d=parseDate(r.awardDate);return d?d.toLocaleDateString('en-US',{month:'short',year:'numeric'}):'—';};
+  // status from set-asides
+  const st=_piStatusFromSetAsides(contracts);
+  const stChips=Object.entries(st.tally).map(([l,n])=>`<span style="display:inline-block;margin:2px 4px 2px 0;font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(26,111,181,0.1);color:#1A6FB5;font-weight:600">${esc(l)} · ${n} of ${st.n}</span>`).join('')
+    +(st.open?`<span style="display:inline-block;margin:2px 4px 2px 0;font-size:10px;padding:2px 8px;border-radius:10px;background:var(--card);color:var(--t2);border:0.5px solid var(--bdr)">Open / unrestricted · ${st.open} of ${st.n}</span>`:'');
+  const allSmall=st.n>0&&(st.tally['Small business']||0)===st.n;
+  const stNote=allSmall
+    ?'Every award was a small-business set-aside, so they are almost certainly a <strong>small business</strong>. Small primes are not required to have FAR 19.702 subcontracting plans — pitch extra capacity and teaming, not plan compliance.'
+    :st.open===st.n?'All awards were open competition — they compete full &amp; open, so they may be other-than-small. Confirm their size before leaning on subcontracting-plan goals.'
+    :'A mix of set-aside and open awards. Winning a set-aside means they held that status when they bid.';
+  // gov contacts on their awards
+  const seen=new Set();const pocs=[];
+  contracts.forEach(r=>{const k=(r.pocEmail||r.pocName||'').toLowerCase();if(!k||seen.has(k))return;seen.add(k);pocs.push(r);});
+  const pocHTML=pocs.slice(0,3).map(r=>`<div style="${li}"><strong>${esc(r.pocName||'—')}</strong>${r.pocEmail?` · <a href="mailto:${esc(r.pocEmail)}" style="color:#1A6FB5">${esc(r.pocEmail)}</a>`:''}${r.pocPhone?` · ${esc(r.pocPhone)}`:''}<div style="font-size:10px;color:var(--t3)">${esc(r.agency||'')}</div></div>`).join('');
+  const link=(href,label)=>`<a href="${href}" target="_blank" rel="noopener" style="font-size:10px;padding:3px 10px;border-radius:5px;border:1px solid var(--bdr);background:var(--card);color:var(--navy);text-decoration:none;font-weight:600">${label}</a>`;
+  return `
+    <div style="border:1px solid rgba(26,111,181,0.25);border-radius:10px;padding:14px;margin-bottom:16px;background:rgba(26,111,181,0.03)">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+        <div style="font-size:13px;font-weight:700;color:var(--navy)">📞 Call prep</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          ${link('https://www.google.com/search?q=%22'+q+'%22','🔎 Google')}
+          ${link('https://www.linkedin.com/search/results/companies/?keywords='+q,'in LinkedIn')}
+          ${link('https://news.google.com/search?q=%22'+q+'%22','📰 News')}
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px">
+        <div style="${box}">
+          <div style="${hd}">Who buys from them</div>
+          ${agList.map(([ag,v])=>`<div style="${li}"><strong>${esc(ag)}</strong> — ${v.n} award${v.n!==1?'s':''}, ${fmtV(v.v)}</div>`).join('')||'<div style="'+li+'">—</div>'}
+          ${offList.length?`<div style="font-size:10px;color:var(--t3);margin-top:4px">Top offices: ${offList.map(([o,n])=>esc(o)+' ('+n+')').join('; ')}</div>`:''}
+        </div>
+        <div style="${box}">
+          <div style="${hd}">What they deliver</div>
+          ${nList.map(([c,n])=>`<div style="${li}"><strong>${esc(c)}</strong> ${esc(NAICS[c]||'')} — ${n} award${n!==1?'s':''}</div>`).join('')||'<div style="'+li+'">—</div>'}
+          ${biggest?`<div style="font-size:10px;color:var(--t3);margin-top:4px">Biggest win: ${esc((biggest.title||'Untitled').slice(0,70))} — ${fmtV(biggest.amount)} (${fd(biggest)})</div>`:''}
+        </div>
+        <div style="${box}">
+          <div style="${hd}">Momentum</div>
+          <div style="${li}">Awards by year: <strong>${yrLine||'—'}</strong></div>
+          ${recent.map(r=>`<div style="${li}">• ${fd(r)} — ${r.link?`<a href="${esc(r.link)}" target="_blank" rel="noopener" style="color:#1A6FB5">${esc((r.title||'Untitled').slice(0,60))}</a>`:esc((r.title||'Untitled').slice(0,60))} (${fmtV(r.amount)})</div>`).join('')}
+        </div>
+        <div style="${box}">
+          <div style="${hd}">What their wins say about them</div>
+          <div>${stChips||'<span style="font-size:11px;color:var(--t3)">No set-aside data</span>'}</div>
+          <div style="font-size:10px;color:var(--t2);margin-top:6px;line-height:1.5">${stNote}</div>
+        </div>
+        ${pocHTML?`<div style="${box}">
+          <div style="${hd}">Gov't contracting contacts on their awards</div>
+          ${pocHTML}
+          <div style="font-size:9px;color:var(--t3);margin-top:4px">These are the agency's contacts, not the company's. Useful for asking the prime about the program.</div>
+        </div>`:''}
+      </div>
+      <div style="margin-top:12px;border-top:0.5px solid var(--bdr);padding-top:10px">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <button id="piAiBtn" onclick="_piGenBrief(false)" style="font-size:11px;padding:5px 12px;border-radius:6px;border:1px solid #7c3aed;background:rgba(124,58,237,0.08);color:#6d28d9;cursor:pointer;font-weight:700">✨ Generate AI call brief</button>
+          <span id="piAiMeta" style="font-size:10px;color:var(--t3)">Talking points, questions and objection handling, built only from the data above (Groq, same key as eligibility analysis).</span>
+        </div>
+        <div id="piAiOut" style="margin-top:10px"></div>
+      </div>
+    </div>`;
+}
+
+function _piBriefFacts(a,contracts){
+  const dated=contracts.slice().sort((x,y)=>(parseDate(y.awardDate)||0)-(parseDate(x.awardDate)||0));
+  const st=_piStatusFromSetAsides(contracts);
+  return{
+    company:_piCleanName(a.name),rawAwardeeField:a.name,
+    totalAwardValue:Math.round(a.tv||0),awardNotices:contracts.length,
+    yearsWithWins:[...new Set(contracts.map(r=>parseDate(r.awardDate)?.getFullYear()).filter(Boolean))].sort(),
+    partnershipScore:a.score??a.sc??null,
+    setAsideProfile:{...st.tally,'Open / unrestricted':st.open,totalAwards:st.n},
+    awards:dated.slice(0,10).map(r=>({title:r.title||'',amountUSD:Math.round(r.amount||0),
+      date:parseDate(r.awardDate)?parseDate(r.awardDate).toISOString().slice(0,10):'',
+      agency:r.agency||'',office:[r.subTier,r.office].filter(Boolean).join(' / '),
+      naics:r.naics?(r.naics+' '+(NAICS[r.naics]||'')).trim():'',setAside:r.setAside||'Unrestricted',
+      description:String(r.desc||'').slice(0,300)}))
+  };
+}
+
+function _piRenderBrief(b,meta){
+  const out=document.getElementById('piAiOut');if(!out)return;
+  const L=(t,arr)=>arr&&arr.length?`<div style="margin-bottom:8px"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#6d28d9;margin-bottom:4px">${t}</div>${arr.map(x=>`<div style="font-size:11px;color:var(--t2);line-height:1.55;margin-bottom:2px">• ${esc(String(x))}</div>`).join('')}</div>`:'';
+  const obj=(b.objections||[]).map(o=>`<div style="font-size:11px;color:var(--t2);line-height:1.55;margin-bottom:4px"><strong>“${esc(o.objection||'')}”</strong><br>→ ${esc(o.response||'')}</div>`).join('');
+  out.innerHTML=`<div style="background:rgba(124,58,237,0.04);border:1px solid rgba(124,58,237,0.2);border-radius:8px;padding:12px">
+    ${b.opener?`<div style="margin-bottom:10px"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#6d28d9;margin-bottom:4px">30-second opener</div><div style="font-size:12px;color:var(--t1);line-height:1.6;font-style:italic">“${esc(b.opener)}”</div></div>`:''}
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px">
+      <div>${L('Why we fit',b.whyFit)}${L('Talking points',b.talkingPoints)}</div>
+      <div>${L('Discovery questions',b.questions)}${obj?`<div style="margin-bottom:8px"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#6d28d9;margin-bottom:4px">Objections → responses</div>${obj}</div>`:''}${L('Verify before the call',b.verify)}</div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;margin-top:6px">
+      <button onclick="_piCopyBrief()" style="font-size:10px;padding:3px 10px;border-radius:5px;border:1px solid var(--bdr);background:var(--card);cursor:pointer;font-weight:600">📋 Copy brief</button>
+      <button onclick="_piGenBrief(true)" style="font-size:10px;padding:3px 10px;border-radius:5px;border:1px solid var(--bdr);background:var(--card);cursor:pointer;font-weight:600">↻ Regenerate</button>
+      <span style="font-size:10px;color:var(--t3)">${esc(meta||'')} · AI-generated from SAM.gov award data — check before relying on it.</span>
+    </div></div>`;
+  window._piLastBrief=b;
+}
+
+function _piCopyBrief(){
+  const b=window._piLastBrief;if(!b)return;
+  const sec=(t,arr)=>arr&&arr.length?t+'\n'+arr.map(x=>'- '+x).join('\n')+'\n\n':'';
+  const name=_piCleanName(window._piCurrent?.name||'');
+  const txt='CALL BRIEF — '+name+'\n\n'+(b.opener?'Opener: '+b.opener+'\n\n':'')+sec('Why we fit',b.whyFit)+sec('Talking points',b.talkingPoints)
+    +sec('Discovery questions',b.questions)+sec('Objections',(b.objections||[]).map(o=>'"'+o.objection+'" -> '+o.response))+sec('Verify before the call',b.verify);
+  navigator.clipboard.writeText(txt).then(()=>showDone('✓ Brief copied',2000)).catch(()=>showDone('Copy failed — select the text manually',3000));
+}
+
+async function _piGenBrief(force){
+  const cur=window._piCurrentFull;if(!cur)return;
+  const out=document.getElementById('piAiOut'),btn=document.getElementById('piAiBtn');
+  const cacheKey='op_callbrief_v1_'+_piCleanName(cur.a.name).toLowerCase();
+  if(!force){try{const c=JSON.parse(localStorage.getItem(cacheKey)||'null');if(c&&c.brief){_piRenderBrief(c.brief,'Saved '+new Date(c.ts).toLocaleDateString('en-US',{month:'short',day:'numeric'}));return;}}catch(e){}}
+  const key=getGroqKey();
+  if(!key){if(out)out.innerHTML='<div style="font-size:11px;color:var(--r)">Add your Groq API key in My Profile to generate AI briefs. The call-prep facts above work without it.</div>';return;}
+  if(btn){btn.disabled=true;btn.textContent='⟳ Writing brief…';}
+  if(out)out.innerHTML='<div style="font-size:11px;color:var(--t3)">Reading their awards and drafting talking points…</div>';
+  const certs=(UGS_CERTS||[]).map(c=>(typeof _CERT_LABELS!=='undefined'&&_CERT_LABELS[c])||c).join(', ')||'none listed';
+  const ourNaics=Object.keys(NAICS).map(k=>k+' '+NAICS[k]).join('; ');
+  const facts=_piBriefFacts(cur.a,cur.contracts);
+  const prompt=`You are preparing a salesperson at ${FIRM_NAME} for a first call with a federal prime contractor. Goal: win SUBCONTRACT work from this prime.
+
+OUR FIRM: ${FIRM_NAME}
+Our certifications: ${certs}
+Our NAICS: ${ourNaics}
+
+PRIME CONTRACTOR — facts from SAM.gov award notices (this is ALL we know):
+${JSON.stringify(facts)}
+
+RULES
+- Use ONLY the facts above. Do not invent revenue, headcount, people, clients, locations or contract details. Anything unknown goes under "verify".
+- Refer to specific awards (title, agency, month/year) where it helps.
+- Winning a set-aside means the prime held that status. A prime that won small-business set-asides is itself a small business. Small businesses are NOT required to have FAR 19.702 subcontracting plans (only other-than-small primes above the threshold are). Never tell them they are required to subcontract unless the facts support it.
+- Federal subcontracting-plan goals cover SB, SDB, WOSB, HUBZone, VOSB and SDVOSB. "Minority-owned" is not itself one of these categories — position us as a small business, and as SDB only if our certifications say so.
+- Write short sentences a salesperson can say on the phone. No fluff.
+
+Return ONLY JSON:
+{"opener":"2-3 sentence opener","whyFit":["3-4 bullets tying their awards to our NAICS/capabilities"],"talkingPoints":["3-5 bullets"],"questions":["4-5 discovery questions"],"objections":[{"objection":"likely pushback","response":"short reply"}],"verify":["2-4 things to check before calling"]}`;
+  try{
+    const resp=await fetch('https://api.groq.com/openai/v1/chat/completions',{
+      method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+      body:JSON.stringify({model:getGroqModel(),max_tokens:2200,temperature:0.3,
+        messages:[{role:'system',content:'Federal B2B sales coach for government subcontracting. Return only valid JSON, no markdown.'},{role:'user',content:prompt}]})
+    });
+    if(!resp.ok){const e=await resp.json().catch(()=>({}));throw new Error(e.error?.message||('HTTP '+resp.status));}
+    const data=await resp.json();
+    let raw=(data.choices?.[0]?.message?.content||'').replace(/^```json?\s*/i,'').replace(/```\s*$/,'').trim();
+    const s=raw.indexOf('{'),e2=raw.lastIndexOf('}');if(s>-1&&e2>s)raw=raw.slice(s,e2+1);
+    const brief=JSON.parse(raw);
+    try{localStorage.setItem(cacheKey,JSON.stringify({ts:Date.now(),brief}));}catch(e){}
+    _piRenderBrief(brief,'Generated just now');
+  }catch(err){
+    if(out)out.innerHTML=`<div style="font-size:11px;color:var(--r)">Couldn't generate the brief: ${esc(String(err.message||err).slice(0,140))}. Try again, or switch model in My Profile.</div>`;
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent='✨ Generate AI call brief';}
+  }
+}
+
 function renderPIDetail(a){
   if(_piChart){_piChart.destroy();_piChart=null;}
   // Normalize field names
@@ -2307,6 +2528,8 @@ function renderPIDetail(a){
   const subPlan=tv>=900000;
   const topAgency=a.topAgency||a.ag||'';
   const topState=a.topState||a.st||'';
+  window._piCurrent={name:a.name,contracts:a.contracts||a.cx||[]};
+  window._piCurrentFull={a,contracts};
 
   // Scroll panel into view
   const panel=document.getElementById('piDetailPanel');
@@ -2378,6 +2601,8 @@ function renderPIDetail(a){
       </div>
     </div>
 
+    ${_piCallPrepHTML(a,contracts)}
+
     <!-- Value by year chart + pitch -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
       <div>
@@ -2395,7 +2620,7 @@ function renderPIDetail(a){
     <div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
         <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--t3)">Contracts won (${contracts.length} total)</div>
-        <button onclick="exportCompanyContracts(${JSON.stringify({name:a.name,contracts:a.contracts||a.cx||[]})})" style="font-size:10px;padding:3px 10px;border-radius:5px;border:1px solid #2E7D52;background:rgba(46,125,82,0.07);color:#2E7D52;cursor:pointer;font-weight:600">⬇ Export all contracts</button>
+        <button onclick="exportCompanyContracts(window._piCurrent)" style="font-size:10px;padding:3px 10px;border-radius:5px;border:1px solid #2E7D52;background:rgba(46,125,82,0.07);color:#2E7D52;cursor:pointer;font-weight:600">⬇ Export all contracts</button>
       </div>
       <div style="overflow-x:auto;border-radius:8px;border:0.5px solid var(--bdr)">
         <table style="width:100%;border-collapse:collapse;font-size:11px">
@@ -2418,8 +2643,8 @@ function renderPIDetail(a){
               const naicsDesc=NAICS[r.naics]||r.naics||'—';
               const agShort=(r.agency||'').length>28?(r.agency||'').slice(0,25)+'…':(r.agency||'—');
               const title=(r.title||'—').length>50?(r.title||'').slice(0,47)+'…':(r.title||'—');
-              return `<tr style="border-top:0.5px solid var(--bdr);${i%2===0?'background:var(--card)':'background:var(--bdr2)'}"
-                ${r.link?`onclick="window.open('${esc(r.link)}','_blank')" style="cursor:pointer" title="Click to open on SAM.gov"`:''}>
+              return `<tr style="border-top:0.5px solid var(--bdr);${i%2===0?'background:var(--card)':'background:var(--bdr2)'};${r.link?'cursor:pointer':''}"
+                ${r.link?`onclick="window.open('${esc(r.link)}','_blank')" title="Click to open on SAM.gov"`:''}>
                 <td style="padding:8px 12px;font-weight:500;color:var(--navy)">${esc(title)}</td>
                 <td style="padding:8px 12px">
                   <div style="font-size:10px;font-weight:600;color:var(--t2)">${r.naics||'—'}</div>
@@ -2440,6 +2665,9 @@ function renderPIDetail(a){
       ${contracts.length>0&&contracts[0].link?'<div style="font-size:10px;color:var(--t3);margin-top:6px;text-align:right">↗ Click any row to open contract on SAM.gov</div>':''}
     </div>
   `;
+
+  // Show a saved AI brief for this company, if one exists (no API call)
+  try{const c=JSON.parse(localStorage.getItem('op_callbrief_v1_'+_piCleanName(a.name).toLowerCase())||'null');if(c&&c.brief)_piRenderBrief(c.brief,'Saved '+new Date(c.ts).toLocaleDateString('en-US',{month:'short',day:'numeric'}));}catch(e){}
 
   // Draw year chart
   if(yrs.length){
@@ -3132,7 +3360,7 @@ function updateScFilteredCount(){
   const el=document.getElementById('scFilteredCount');
   if(el){
     if(_piCatFilter===null){
-      el.textContent=src.length.toLocaleString()+' firms in matrix';
+      el.textContent=src.length.toLocaleString()+' firms';
     } else {
       const CAT_LBL={1:'One-off (1yr)',2:'Emerging (2yr)',3:'Established (3yr)',4:'Consistent (4+yr)'};
       el.innerHTML=`<strong style="color:#1A6FB5">${shown.length.toLocaleString()}</strong> ${CAT_LBL[_piCatFilter]} firms shown · <span style="color:var(--t3)">${src.length.toLocaleString()} total</span>`;
@@ -3278,27 +3506,7 @@ function renderScatter(){
       onClick:(evt,els)=>{
         if(!els.length)return;
         const d=bubbleData[els[0].index];
-        const col=cColor(d.consistency);
-        const tg=document.getElementById('scTargets');
-        tg.innerHTML=`<div style="padding-bottom:10px;border-bottom:1px solid var(--bdr);margin-bottom:10px">
-          <div style="font-size:13px;font-weight:600;color:var(--navy)">${esc(d.name)}</div>
-          <div style="display:flex;gap:6px;margin-top:5px;flex-wrap:wrap">
-            <span style="font-size:10px;padding:2px 8px;border-radius:12px;background:${col}22;color:${col};font-weight:700;border:1px solid ${col}44">${cLabel(d.consistency)}</span>
-            <span style="font-size:10px;padding:2px 8px;border-radius:12px;background:var(--bdr2);color:var(--t2)">${esc(d.naics)}</span>
-          </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px">
-            <div style="background:var(--bdr2);border-radius:6px;padding:8px;text-align:center">
-              <div style="font-size:15px;font-weight:600;color:var(--navy)">${fmtV(d.tv)}</div>
-              <div style="font-size:9px;color:var(--t3)">Total value</div>
-            </div>
-            <div style="background:var(--bdr2);border-radius:6px;padding:8px;text-align:center">
-              <div style="font-size:15px;font-weight:600;color:var(--navy)">${d.cnt}</div>
-              <div style="font-size:9px;color:var(--t3)">Contracts won</div>
-            </div>
-          </div>
-          <div style="margin-top:8px;font-size:10px;color:var(--t2)">Latest: ${d.yr} · Avg: ${fmtV(d.tv/d.cnt)} per contract</div>
-          <div style="margin-top:8px;font-size:10px;color:var(--t2);padding:8px;background:var(--bdr2);border-radius:6px;line-height:1.5">${d.consistency>=4?'★ Consistent winner — reach out now, high-confidence partner':d.consistency===3?'Established — propose teaming agreement':d.consistency===2?'Emerging — good timing to build relationship early':'One-off — verify before investing outreach time'}</div>
-        </div>`;
+        openAwardeeByName(d.name);
       }
     }
   });
@@ -3318,7 +3526,7 @@ function renderScatter(){
       <div style="font-size:10px;padding:2px 5px;border-radius:3px;background:${col}22;color:${col};font-weight:600;white-space:nowrap">${p.consistency>=4?'★★★':p.consistency===3?'★★':'★'}</div>
     </div>`;
   });
-  tg.innerHTML=h||'<div style="font-size:11px;color:var(--t3)">No data</div>';
+  if(tg)tg.innerHTML=h||'<div style="font-size:11px;color:var(--t3)">No data</div>';
 }
 
 // ── Insights ──
