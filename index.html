@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Opportunity Pipeline v54</title>
+<title>Opportunity Pipeline v55</title>
 <link rel="icon" href="https://ugsconsulting.com/wp-content/uploads/2026/05/cropped-UGSLogo-32x32.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
@@ -1653,6 +1653,22 @@ document.addEventListener('DOMContentLoaded',()=>{
   try{updateGSBtnLabel();}catch(e){}
 });
 
+// ── Cert gap: which certification(s) a set-aside needs that My Profile doesn't hold ──
+const _CERT_LABELS={minority:'Minority-Owned',small_business:'Small Business','8a':'8(a)',sdvosb:'SDVOSB',
+  hubzone:'HUBZone',wosb:'WOSB',edwosb:'EDWOSB',sdb:'SDB'};
+function _piCertGap(a){
+  const cx=a.contracts||[];const tally={};
+  cx.forEach(r=>{
+    const s=String(r.setAside||'').toLowerCase();if(!s)return;
+    const miss=[];
+    for(const[cert,pats]of Object.entries(CERT_SETASIDE_MAP)){
+      if(pats.some(p=>s.includes(p))&&!UGS_CERTS.includes(cert))miss.push(_CERT_LABELS[cert]||cert);
+    }
+    miss.forEach(m=>{tally[m]=(tally[m]||0)+1;});
+  });
+  return Object.entries(tally).sort((x,y)=>y[1]-x[1]).map(([c,n])=>c+' ('+n+' of '+cx.length+' awards)').join('; ');
+}
+
 // ── Sub-Contracting → Google Sheet ───────────────────────────
 async function createGoogleSheet(){
   const url=getScriptUrl();
@@ -1674,7 +1690,7 @@ async function createGoogleSheet(){
     'Est Subcontract Value ($)',
     'BD Contact Name','BD Email','BD Phone','BD LinkedIn',
     'Company Website','Outreach Status','Last Updated',
-    'Award Numbers'
+    'Award Numbers','Cert Gap'
   ];
 
   const now=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
@@ -1704,7 +1720,8 @@ async function createGoogleSheet(){
     (a.states||[]).join('; '),
     Math.round((a.tv||0)*0.15),
     '','','','','','Not contacted',now,
-    [...new Set((a.contracts||[]).map(r=>String(r.awardNum||'').trim()).filter(Boolean))].join('; ')
+    [...new Set((a.contracts||[]).map(r=>String(r.awardNum||'').trim()).filter(Boolean))].join('; '),
+    _piCertGap(a)
   ]});
 
   // Show progress panel
